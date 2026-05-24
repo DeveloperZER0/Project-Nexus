@@ -1,0 +1,307 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using Microsoft.EntityFrameworkCore;
+using Nexus.Data.Entities;
+using Nexus.Models;
+
+namespace Nexus.Data;
+
+public class NexusDataService
+{
+    private const string CurrentUserLogin = "marekdev";
+    private readonly DbContextOptions<NexusDbContext> _options;
+
+    public NexusDataService(DbContextOptions<NexusDbContext> options)
+    {
+        _options = options;
+    }
+
+    private NexusDbContext CreateContext() => new(_options);
+
+    public int GetCurrentUserId()
+    {
+        using var db = CreateContext();
+        return db.Users.Where(u => u.Login == CurrentUserLogin)
+            .Select(u => u.Id)
+            .First();
+    }
+
+    public UserProfile GetCurrentUserProfile()
+    {
+        using var db = CreateContext();
+        var user = db.Users
+            .Include(u => u.Profile)
+            .First(u => u.Login == CurrentUserLogin);
+
+        return MapUserProfile(user, user.Profile);
+    }
+
+    public List<Post> GetFeedPosts()
+    {
+        using var db = CreateContext();
+        var posts = db.Posts
+            .Include(p => p.Author)
+                .ThenInclude(a => a.Profile)
+            .Include(p => p.Hashtags)
+            .OrderByDescending(p => p.CreatedAt)
+            .ToList();
+
+        return posts.Select(MapPost).ToList();
+    }
+
+    public List<Post> GetUserPosts(int userId)
+    {
+        using var db = CreateContext();
+        var posts = db.Posts
+            .Include(p => p.Author)
+                .ThenInclude(a => a.Profile)
+            .Include(p => p.Hashtags)
+            .Where(p => p.AuthorId == userId)
+            .OrderByDescending(p => p.CreatedAt)
+            .ToList();
+
+        return posts.Select(MapPost).ToList();
+    }
+
+    public List<Post> GetBookmarkedPosts(int userId)
+    {
+        using var db = CreateContext();
+        var posts = db.Bookmarks
+            .Where(b => b.UserId == userId)
+            .Select(b => b.Post!)
+            .Include(p => p.Author)
+                .ThenInclude(a => a.Profile)
+            .Include(p => p.Hashtags)
+            .OrderByDescending(p => p.CreatedAt)
+            .ToList();
+
+        return posts.Select(MapPost).ToList();
+    }
+
+    public List<TrendingHashtag> GetTrendingHashtags(int take = 10)
+    {
+        using var db = CreateContext();
+        var tags = db.PostHashtags
+            .GroupBy(h => h.Tag)
+            .Select(g => new { Tag = g.Key, Count = g.Count() })
+            .OrderByDescending(g => g.Count)
+            .Take(take)
+            .ToList();
+
+        var id = 1;
+        return tags.Select(t => new TrendingHashtag
+        {
+            Id = id++,
+            Name = t.Tag.TrimStart('#'),
+            PostsCount = t.Count.ToString("N0", CultureInfo.InvariantCulture),
+            Category = "",
+            Description = "",
+        }).ToList();
+    }
+
+    public List<Notification> GetNotifications(int userId)
+    {
+        using var db = CreateContext();
+        var notifications = db.Notifications
+            .Include(n => n.Actor)
+                .ThenInclude(a => a.Profile)
+            .Where(n => n.RecipientId == userId)
+            .OrderByDescending(n => n.CreatedAt)
+            .ToList();
+
+        return notifications.Select(n => new Notification
+        {
+            Id = n.Id.ToString(),
+            Type = n.Type,
+            User = MapAuthor(n.Actor, n.Actor?.Profile),
+            Preview = n.Preview,
+            Time = ToDisplayTime(n.CreatedAt),
+            IsRead = n.IsRead,
+        }).ToList();
+    }
+
+    public List<Conversation> GetConversations(int userId)
+    {
+        using var db = CreateContext();
+        var conversations = db.Conversations
+            .Include(c => c.Participants)
+                .ThenInclude(p => p.User)
+                    .ThenInclude(u => u.Profile)
+            .Include(c => c.Messages)
+            .Where(c => c.Participants.Any(p => p.UserId == userId))
+            .OrderByDescending(c => c.UpdatedAt)
+            .ToList();
+
+        return conversations.Select(c => MapConversation(c, userId)).ToList();
+    }
+
+    public List<ChatMessage> GetMessages(int conversationId)
+    {
+        using var db = CreateContext();
+        var messages = db.Messages
+            .Where(m => m.ConversationId == conversationId)
+            .OrderBy(m => m.CreatedAt)
+            .ToList();
+
+        return messages.Select(m => new ChatMessage
+        {
+            Id = m.Id.ToString(),
+            SenderId = m.SenderId,
+            Tekst = m.Text,
+            Time = m.CreatedAt.ToString("HH:mm"),
+            IsRead = m.IsRead,
+        }).ToList();
+    }
+
+    public Post AddPost(int authorId, string text)
+    {
+        using var db = CreateContext();
+        var author = db.Users.Include(u => u.Profile).First(u => u.Id == authorId);
+        var post = new PostEntity
+        {
+            AuthorId = authorId,
+            Text = text,
+            CreatedAt = DateTime.UtcNow,
+        };
+
+        foreach (var tag in ExtractHashtags(text))
+        {
+            post.Hashtags.Add(new PostHashtagEntity { Tag = tag });
+        }
+
+        db.Posts.Add(post);
+        db.SaveChanges();
+
+        db.Entry(post).Reference(p => p.Author).CurrentValue = author;
+        return MapPost(post);
+    }
+
+    public ChatMessage AddMessage(int conversationId, int senderId, string text)
+    {
+        using var db = CreateContext();
+        var message = new MessageEntity
+        {
+            ConversationId = conversationId,
+            SenderId = senderId,
+            Text = text,
+            CreatedAt = DateTime.UtcNow,
+            IsRead = false,
+        };
+
+        db.Messages.Add(message);
+
+        var conversation = db.Conversations.First(c => c.Id == conversationId);
+        conversation.LastMessage = text;
+        conversation.UpdatedAt = DateTime.UtcNow;
+
+        db.SaveChanges();
+
+        return new ChatMessage
+        {
+            Id = message.Id.ToString(),
+            SenderId = message.SenderId,
+            Tekst = message.Text,
+            Time = message.CreatedAt.ToString("HH:mm"),
+            IsRead = message.IsRead,
+        };
+    }
+
+    public List<UserSession> GetSessions(int userId)
+    {
+        using var db = CreateContext();
+        return db.Sessions
+            .Where(s => s.UserId == userId)
+            .OrderByDescending(s => s.Current)
+            .Select(s => new UserSession
+            {
+                Id = s.Id,
+                Device = s.Device,
+                IconGlyph = s.IconGlyph,
+                Location = s.Location,
+                Expiry = s.Expiry,
+                Current = s.Current,
+            }).ToList();
+    }
+
+    private static Post MapPost(PostEntity post)
+    {
+        return new Post
+        {
+            Id = post.Id.ToString(),
+            Author = MapAuthor(post.Author, post.Author?.Profile),
+            Tekst = post.Text,
+            MediaUrl = post.MediaUrl,
+            Hashtags = post.Hashtags.Select(h => h.Tag.TrimStart('#')).ToList(),
+            DataUtworzenia = ToDisplayTime(post.CreatedAt),
+            LikesCount = post.LikesCount,
+            CommentsCount = post.CommentsCount,
+            RetweetsCount = post.RetweetsCount,
+        };
+    }
+
+    private static Conversation MapConversation(ConversationEntity conversation, int userId)
+    {
+        var other = conversation.Participants
+            .Select(p => p.User)
+            .FirstOrDefault(u => u != null && u.Id != userId);
+
+        return new Conversation
+        {
+            Id = conversation.Id.ToString(),
+            Imie = other?.Profile?.FirstName ?? string.Empty,
+            Nazwisko = other?.Profile?.LastName ?? string.Empty,
+            Login = other?.Login ?? string.Empty,
+            AvatarUrl = other?.Profile?.AvatarUrl ?? string.Empty,
+            LastMessage = conversation.LastMessage ?? conversation.Messages.OrderByDescending(m => m.CreatedAt).FirstOrDefault()?.Text ?? string.Empty,
+            Time = ToDisplayTime(conversation.UpdatedAt),
+            IsRead = true,
+        };
+    }
+
+    private static PostAuthor MapAuthor(UserEntity? user, UserProfileEntity? profile)
+    {
+        return new PostAuthor
+        {
+            Imie = profile?.FirstName ?? string.Empty,
+            Nazwisko = profile?.LastName ?? string.Empty,
+            Login = user?.Login ?? string.Empty,
+            AvatarUrl = profile?.AvatarUrl ?? string.Empty,
+        };
+    }
+
+    private static UserProfile MapUserProfile(UserEntity user, UserProfileEntity? profile)
+    {
+        return new UserProfile
+        {
+            Id = user.Id,
+            Login = user.Login,
+            Email = user.Email,
+            Imie = profile?.FirstName ?? string.Empty,
+            Nazwisko = profile?.LastName ?? string.Empty,
+            AvatarUrl = profile?.AvatarUrl ?? string.Empty,
+            Bio = profile?.Bio ?? string.Empty,
+            DataUrodzenia = profile?.BirthDate ?? string.Empty,
+            Lokalizacja = profile?.Location ?? string.Empty,
+            Website = profile?.Website ?? string.Empty,
+            DataUtworzenia = profile?.JoinedDate ?? string.Empty,
+            FollowCount = user.Following.Count,
+            FollowersCount = user.Followers.Count,
+            PostsCount = user.Posts.Count,
+        };
+    }
+
+    private static string ToDisplayTime(DateTime dateTime)
+    {
+        return dateTime.ToLocalTime().ToString("g", CultureInfo.GetCultureInfo("pl-PL"));
+    }
+
+    private static IEnumerable<string> ExtractHashtags(string text)
+    {
+        return text.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Where(word => word.StartsWith('#') && word.Length > 1)
+            .Select(word => word.Trim().TrimStart('#'))
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+    }
+}

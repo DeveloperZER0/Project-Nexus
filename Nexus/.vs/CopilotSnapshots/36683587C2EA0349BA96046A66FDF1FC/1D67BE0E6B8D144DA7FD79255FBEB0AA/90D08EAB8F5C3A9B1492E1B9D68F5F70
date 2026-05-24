@@ -1,0 +1,16 @@
+﻿using Microsoft.UI.Xaml.Controls;
+using Nexus.ViewModels;
+
+namespace Nexus.Views;
+
+public sealed partial class BookmarksPage : Page
+{
+    public BookmarksViewModel ViewModel { get; } = new();
+
+    public BookmarksPage()
+    {
+        InitializeComponent();
+        SubtitleText.Text = ViewModel.Subtitle;
+        BookmarksListView.ItemsSource = ViewModel.Posts;
+    }
+}

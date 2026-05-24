@@ -1,0 +1,147 @@
+﻿using System.Collections.Generic;
+
+namespace Nexus.Models;
+
+/// <summary>
+/// Model autora posta — dane wyświetlane przy każdym poście.
+/// </summary>
+public class PostAuthor
+{
+    public string Imie { get; set; } = string.Empty;
+    public string Nazwisko { get; set; } = string.Empty;
+    public string Login { get; set; } = string.Empty;
+    public string AvatarUrl { get; set; } = string.Empty;
+
+    public string DisplayName => $"{Imie} {Nazwisko}";
+    public string AtLogin => $"@{Login}";
+}
+
+/// <summary>
+/// Model posta w feedzie — odpowiednik PostData z designu React.
+/// </summary>
+public class Post
+{
+    public string Id { get; set; } = string.Empty;
+    public PostAuthor Author { get; set; } = new();
+    public string Tekst { get; set; } = string.Empty;
+    public string? MediaUrl { get; set; }
+    public List<string> Hashtags { get; set; } = [];
+    public string DataUtworzenia { get; set; } = string.Empty;
+    public int LikesCount { get; set; }
+    public int CommentsCount { get; set; }
+    public int RetweetsCount { get; set; }
+    public bool Liked { get; set; }
+    public bool Bookmarked { get; set; }
+}
+
+/// <summary>
+/// Model powiadomienia.
+/// </summary>
+public class Notification
+{
+    public string Id { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty; // Like, Follow, Repost, Reply, Mention
+    public PostAuthor User { get; set; } = new();
+    public string? Preview { get; set; }
+    public string Time { get; set; } = string.Empty;
+    public bool IsRead { get; set; }
+}
+
+/// <summary>
+/// Model konwersacji na liście wiadomości.
+/// </summary>
+public class Conversation
+{
+    public string Id { get; set; } = string.Empty;
+    public string Imie { get; set; } = string.Empty;
+    public string Nazwisko { get; set; } = string.Empty;
+    public string Login { get; set; } = string.Empty;
+    public string AvatarUrl { get; set; } = string.Empty;
+    public string LastMessage { get; set; } = string.Empty;
+    public string Time { get; set; } = string.Empty;
+    public bool IsRead { get; set; }
+
+    public string DisplayName => $"{Imie} {Nazwisko}";
+}
+
+/// <summary>
+/// Pojedyncza wiadomość w czacie.
+/// </summary>
+public class ChatMessage
+{
+    public string Id { get; set; } = string.Empty;
+    public int SenderId { get; set; }
+    public string Tekst { get; set; } = string.Empty;
+    public string Time { get; set; } = string.Empty;
+    public bool IsRead { get; set; }
+
+    /// <summary>
+    /// Czy wiadomość jest od zalogowanego użytkownika (SenderId == 1).
+    /// </summary>
+    public bool IsOwn => SenderId == 1;
+}
+
+/// <summary>
+/// Model popularnego hashtagu (strona Explore / RightPanel).
+/// </summary>
+public class TrendingHashtag
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string PostsCount { get; set; } = string.Empty;
+    public string Category { get; set; } = string.Empty;
+    public string? Description { get; set; }
+
+    public string DisplayName => $"#{Name}";
+}
+
+/// <summary>
+/// Sugerowany użytkownik do obserwowania.
+/// </summary>
+public class SuggestedUser
+{
+    public string Imie { get; set; } = string.Empty;
+    public string Nazwisko { get; set; } = string.Empty;
+    public string Login { get; set; } = string.Empty;
+    public string AvatarUrl { get; set; } = string.Empty;
+
+    public string DisplayName => $"{Imie} {Nazwisko}";
+    public string AtLogin => $"@{Login}";
+}
+
+/// <summary>
+/// Profil aktualnego użytkownika.
+/// </summary>
+public class UserProfile
+{
+    public int Id { get; set; }
+    public string Login { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Imie { get; set; } = string.Empty;
+    public string Nazwisko { get; set; } = string.Empty;
+    public string AvatarUrl { get; set; } = string.Empty;
+    public string Bio { get; set; } = string.Empty;
+    public string DataUrodzenia { get; set; } = string.Empty;
+    public string Lokalizacja { get; set; } = string.Empty;
+    public string Website { get; set; } = string.Empty;
+    public string DataUtworzenia { get; set; } = string.Empty;
+    public int FollowCount { get; set; }
+    public int FollowersCount { get; set; }
+    public int PostsCount { get; set; }
+
+    public string DisplayName => $"{Imie} {Nazwisko}";
+    public string AtLogin => $"@{Login}";
+}
+
+/// <summary>
+/// Sesja aktywna użytkownika (Settings).
+/// </summary>
+public class UserSession
+{
+    public int Id { get; set; }
+    public string Device { get; set; } = string.Empty;
+    public string IconGlyph { get; set; } = string.Empty;
+    public string Location { get; set; } = string.Empty;
+    public string Expiry { get; set; } = string.Empty;
+    public bool Current { get; set; }
+}

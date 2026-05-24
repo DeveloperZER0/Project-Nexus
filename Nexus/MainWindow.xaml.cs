@@ -1,0 +1,84 @@
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.Extensions.DependencyInjection;
+using Nexus.Models;
+using Nexus.ViewModels;
+
+// To learn more about WinUI, the WinUI project structure,
+// and more about our project templates, see: http://aka.ms/winui-project-info.
+
+namespace Nexus
+{
+    /// <summary>
+    /// Główne okno aplikacji — obsługuje nawigację między stronami.
+    /// Minimalna logika w code-behind (tylko nawigacja Frame, reszta w ViewModelach).
+    /// </summary>
+    public sealed partial class MainWindow : Window
+    {
+        public ShellViewModel ViewModel { get; }
+
+        public MainWindow()
+        {
+            InitializeComponent();
+
+            ViewModel = ((App)Application.Current).Services.GetRequiredService<ShellViewModel>();
+
+            // ItemsRepeater w prawym panelu używa {Binding ViewModel.SuggestedUsers},
+            // więc Grid musi mieć ustawiony DataContext na okno (this).
+            RootLayout.DataContext = this;
+
+            // Domyślnie nawiguj do strony głównej
+            ContentFrame.Navigate(typeof(Views.HomePage));
+            NavListView.SelectedIndex = 0;
+        }
+
+        /// <summary>
+        /// Obsługa nawigacji — mapowanie tagu ListViewItem na typ strony.
+        /// </summary>
+        private void NavListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (NavListView.SelectedItem is not ListViewItem item) return;
+            var tag = item.Tag?.ToString();
+
+            var pageType = tag switch
+            {
+                "home" => typeof(Views.HomePage),
+                "explore" => typeof(Views.ExplorePage),
+                "notifications" => typeof(Views.NotificationsPage),
+                "messages" => typeof(Views.MessagesPage),
+                "bookmarks" => typeof(Views.BookmarksPage),
+                "profile" => typeof(Views.ProfilePage),
+                "settings" => typeof(Views.SettingsPage),
+                _ => typeof(Views.HomePage),
+            };
+
+            // Unikaj ponownej nawigacji do tej samej strony
+            if (ContentFrame.CurrentSourcePageType != pageType)
+            {
+                ContentFrame.Navigate(pageType);
+            }
+
+            // Odśwież liczniki badge w sidebarze (wejście na powiadomienia/wiadomości
+            // resetuje nieprzeczytane — wywoływane po niewielkim opóźnieniu, żeby strona
+            // miała szansę zaktualizować bazę).
+            DispatcherQueue.TryEnqueue(() => ViewModel.RefreshBadges());
+        }
+
+        /// <summary>
+        /// Przycisk "Napisz post" — nawiguje na stronę główną (z ComposeBox).
+        /// </summary>
+        private void ComposeButton_Click(object sender, RoutedEventArgs e)
+        {
+            ContentFrame.Navigate(typeof(Views.HomePage));
+            NavListView.SelectedIndex = 0;
+        }
+
+        private void FollowButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.Tag is SuggestedUser user)
+            {
+                ViewModel.ToggleFollow(user);
+            }
+        }
+    }
+}

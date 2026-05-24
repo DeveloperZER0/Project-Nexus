@@ -1,0 +1,268 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+    HomePage.xaml — Strona główna z feedem postów.
+    Odpowiednik: design/components/pages/HomePage.tsx
+    Zawiera: nagłówek z zakładkami (Pivot), ComposeBox, listę postów.
+-->
+<Page
+    x:Class="Nexus.Views.HomePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:Nexus.ViewModels"
+    xmlns:models="using:Nexus.Models"
+    xmlns:helpers="using:Nexus.Helpers"
+    Background="Transparent">
+
+    <Page.Resources>
+        <!-- Konwertery muszą być w zasięgu Page aby działały w DataTemplate (kompilator x:Bind) -->
+        <helpers:BoolToBrushConverter x:Key="BoolToBrushConverter" />
+
+        <!-- DataTemplate dla pojedynczego posta (PostCard) -->
+        <DataTemplate x:Key="PostCardTemplate"                         >
+            <Border x:ConnectionId='3' Padding="14" BorderBrush="{StaticResource NexusBorderBrush}"
+                    BorderThickness="0,0,0,1" Background="Transparent">
+                <Grid ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Awatar autora -->
+                    <Border Grid.Column="0" Width="40" Height="40" CornerRadius="20"
+                            BorderBrush="{StaticResource NexusBorderBrush}" BorderThickness="1"
+                            VerticalAlignment="Top">
+                        <Border.Background>
+                            <ImageBrush Stretch="UniformToFill">
+                                <ImageBrush.ImageSource>
+                                    <BitmapImage x:ConnectionId='20'                                      
+                                                 DecodePixelWidth="80" CreateOptions="IgnoreImageCache" />
+                                </ImageBrush.ImageSource>
+                            </ImageBrush>
+                        </Border.Background>
+                    </Border>
+
+                    <StackPanel Grid.Column="1" Spacing="4">
+                        <!-- Nagłówek: imię + login + czas -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock x:ConnectionId='17'                                   
+                                           Style="{StaticResource NexusDisplayNameStyle}" />
+                                <TextBlock FontSize="12"
+                                           Foreground="{StaticResource NexusMutedForegroundBrush}">
+                                    <Run x:ConnectionId='18'                                />
+                                    <Run Text=" · " />
+                                    <Run x:ConnectionId='19'                                />
+                                </TextBlock>
+                            </StackPanel>
+                            <Button Grid.Column="1" Background="Transparent" BorderThickness="0"
+                                    Padding="4" CornerRadius="4">
+                                <FontIcon Glyph="&#xE712;" FontSize="14"
+                                          Foreground="{StaticResource NexusMutedForegroundBrush}" />
+                            </Button>
+                        </Grid>
+
+                        <!-- Treść posta -->
+                        <TextBlock x:ConnectionId='4'                      
+                                   Style="{StaticResource NexusBodyStyle}"
+                                   FontSize="14" LineHeight="21" />
+
+                        <!-- Hashtagi -->
+                        <ItemsRepeater x:ConnectionId='5'                                 Margin="0,4,0,0">
+                            <ItemsRepeater.Layout>
+                                <StackLayout Orientation="Horizontal" Spacing="6" />
+                            </ItemsRepeater.Layout>
+                            <ItemsRepeater.ItemTemplate>
+                                <DataTemplate                      >
+                                    <Border x:ConnectionId='15' Style="{StaticResource NexusHashtagChipStyle}">
+                                        <TextBlock FontSize="11" FontWeight="Medium"
+                                                   Foreground="{StaticResource NexusVioletLightBrush}">
+                                            <Run Text="#" /><Run x:ConnectionId='16'                 />
+                                        </TextBlock>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsRepeater.ItemTemplate>
+                        </ItemsRepeater>
+
+                        <!-- Przyciski akcji: komentarz, repost, polubienie, zakładka, udostępnij -->
+                        <StackPanel Orientation="Horizontal" Spacing="2" Margin="0,6,0,0">
+                            <!-- Komentarz -->
+                            <Button x:ConnectionId='6' Background="Transparent" BorderThickness="0" Padding="6,4" CornerRadius="4"
+                                                                              >
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE8BD;" FontSize="14"
+                                              Foreground="{StaticResource NexusMutedForegroundBrush}" />
+                                    <TextBlock x:ConnectionId='13'                               FontSize="11"
+                                               Foreground="{StaticResource NexusMutedForegroundBrush}"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <!-- Repost -->
+                            <Button x:ConnectionId='7' Background="Transparent" BorderThickness="0" Padding="6,4" CornerRadius="4"
+                                                                             >
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE8EB;" FontSize="14"
+                                              Foreground="{StaticResource NexusMutedForegroundBrush}" />
+                                    <TextBlock x:ConnectionId='12'                               FontSize="11"
+                                               Foreground="{StaticResource NexusMutedForegroundBrush}"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <!-- Polubienie -->
+                            <Button x:ConnectionId='8' Background="Transparent" BorderThickness="0" Padding="6,4" CornerRadius="4"
+                                                                           >
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xEB51;" FontSize="14"
+                                              Foreground="{StaticResource NexusMutedForegroundBrush}" />
+                                    <TextBlock x:ConnectionId='11'                            FontSize="11"
+                                               Foreground="{StaticResource NexusMutedForegroundBrush}"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <!-- Zakładka -->
+                            <Button x:ConnectionId='9' Background="Transparent" BorderThickness="0" Padding="6,4" CornerRadius="4"
+                                                                               >
+                                <FontIcon x:ConnectionId='10' Glyph="&#xE8A4;" FontSize="14"
+                                                                                                                                                         />
+                            </Button>
+                            <!-- Udostępnij -->
+                            <Button Background="Transparent" BorderThickness="0" Padding="6,4" CornerRadius="4">
+                                <FontIcon Glyph="&#xE72D;" FontSize="14"
+                                          Foreground="{StaticResource NexusMutedForegroundBrush}" />
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </Page.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel>
+            <!-- Nagłówek strony z zakładkami -->
+            <Border BorderBrush="{StaticResource NexusBorderBrush}" BorderThickness="0,0,0,1"
+                    Background="{StaticResource NexusCardBrush}">
+                <StackPanel>
+                    <TextBlock Text="Strona główna"
+                               Style="{StaticResource NexusPageHeaderStyle}"
+                               Margin="16,12,16,4" />
+
+                    <!-- Pivot / Zakładki (odpowiednik Pivot.tsx) -->
+                    <StackPanel Orientation="Horizontal" Margin="8,0">
+                        <Button x:ConnectionId='26' x:Name="TabForYou" Content="Dla Ciebie"
+                                Background="Transparent" BorderThickness="0"
+                                Foreground="{StaticResource NexusForegroundBrush}"
+                                FontWeight="SemiBold" FontSize="13"
+                                Padding="16,10"                   Tag="forYou">
+                        </Button>
+                        <Button x:ConnectionId='27' x:Name="TabFollowing" Content="Obserwowani"
+                                Background="Transparent" BorderThickness="0"
+                                Foreground="{StaticResource NexusMutedForegroundBrush}"
+                                FontSize="13" Padding="16,10"
+                                                  Tag="following">
+                        </Button>
+                    </StackPanel>
+                    <!-- Aktywny wskaźnik zakładki -->
+                    <Border x:ConnectionId='25' x:Name="TabIndicator" Width="80" Height="2" CornerRadius="1"
+                            Background="{StaticResource NexusVioletBrush}"
+                            HorizontalAlignment="Left" Margin="16,0,0,0" />
+                </StackPanel>
+            </Border>
+
+            <!-- ComposeBox (odpowiednik ComposeBox.tsx) -->
+            <Border Padding="14" BorderBrush="{StaticResource NexusBorderBrush}" BorderThickness="0,0,0,1">
+                <Grid ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Awatar -->
+                    <Border Grid.Column="0" Width="40" Height="40" CornerRadius="20"
+                            BorderBrush="{StaticResource NexusBorderBrush}" BorderThickness="1"
+                            VerticalAlignment="Top">
+                        <Border.Background>
+                            <ImageBrush Stretch="UniformToFill">
+                                <ImageBrush.ImageSource>
+                                    <BitmapImage UriSource="https://images.unsplash.com/photo-1543132220-e7fef0b974e7?crop=entropy&amp;cs=tinysrgb&amp;fit=max&amp;fm=jpg&amp;q=80&amp;w=200"
+                                                 CreateOptions="IgnoreImageCache" />
+                                </ImageBrush.ImageSource>
+                            </ImageBrush>
+                        </Border.Background>
+                    </Border>
+
+                    <StackPanel Grid.Column="1" Spacing="8">
+                        <TextBox x:ConnectionId='22' x:Name="ComposeTextBox"
+                                 PlaceholderText="Co się u Ciebie dzieje, Marek?"
+                                 AcceptsReturn="True" TextWrapping="Wrap"
+                                 MinHeight="60" MaxHeight="120"
+                                 Background="Transparent"
+                                 BorderThickness="0,0,0,1"
+                                 BorderBrush="{StaticResource NexusBorderBrush}"
+                                 Foreground="{StaticResource NexusForegroundBrush}"
+                                 FontSize="14"
+                                                                          />
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Ikony narzędzi compose -->
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="2">
+                                <Button Background="Transparent" BorderThickness="0" Padding="6" CornerRadius="4">
+                                    <FontIcon Glyph="&#xE8B9;" FontSize="16"
+                                              Foreground="{StaticResource NexusVioletBrush}" />
+                                </Button>
+                                <Button Background="Transparent" BorderThickness="0" Padding="6" CornerRadius="4">
+                                    <FontIcon Glyph="&#xF0E2;" FontSize="16"
+                                              Foreground="{StaticResource NexusVioletBrush}" />
+                                </Button>
+                                <Button Background="Transparent" BorderThickness="0" Padding="6" CornerRadius="4">
+                                    <FontIcon Glyph="&#xED54;" FontSize="16"
+                                              Foreground="{StaticResource NexusVioletBrush}" />
+                                </Button>
+                                <Button Background="Transparent" BorderThickness="0" Padding="6" CornerRadius="4">
+                                    <FontIcon Glyph="&#xE9D9;" FontSize="16"
+                                              Foreground="{StaticResource NexusVioletBrush}" />
+                                </Button>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12"
+                                        VerticalAlignment="Center">
+                                <TextBlock x:ConnectionId='23' x:Name="CharCountText" Text="280" FontSize="11"
+                                           Foreground="{StaticResource NexusMutedForegroundBrush}"
+                                           VerticalAlignment="Center" />
+                                <Button x:ConnectionId='24' x:Name="PublishButton"
+                                        Style="{StaticResource NexusPrimaryButtonStyle}"
+                                        IsEnabled="False"                            >
+                                    <TextBlock Text="Opublikuj" FontSize="13" FontWeight="SemiBold" />
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Lista postów -->
+            <ListView x:ConnectionId='21' x:Name="PostsListView"
+                      SelectionMode="None"
+                      IsItemClickEnabled="False"
+                      ItemTemplate="{StaticResource PostCardTemplate}">
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="Padding" Value="0" />
+                        <Setter Property="Margin" Value="0" />
+                        <Setter Property="MinHeight" Value="0" />
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    </Style>
+                </ListView.ItemContainerStyle>
+            </ListView>
+        </StackPanel>
+    </ScrollViewer>
+</Page>
+

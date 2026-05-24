@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    LoginPage.xaml — formularz logowania.
+    LoginViewModel emituje LoginSucceeded → code-behind woła App.ShowMainWindow.
+-->
+<Page
+    x:Class="Nexus.Views.LoginPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:Nexus.ViewModels"
+    xmlns:helpers="using:Nexus.Helpers"
+    Background="Transparent">
+
+    <Page.Resources>
+        <helpers:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
+        <helpers:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+    </Page.Resources>
+
+    <Grid>
+        <Border MaxWidth="380" MinWidth="320"
+                Background="{StaticResource NexusCardBrush}"
+                BorderBrush="{StaticResource NexusBorderBrush}" BorderThickness="1"
+                CornerRadius="8" Padding="32"
+                HorizontalAlignment="Center" VerticalAlignment="Center">
+            <StackPanel Spacing="10">
+                <!-- Logo + tytuł -->
+                <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center" Margin="0,0,0,4">
+                    <Border Background="{StaticResource NexusVioletBrush}" CornerRadius="6"
+                            Width="32" Height="32">
+                        <FontIcon Glyph="&#xF0E2;" FontSize="16" Foreground="White"
+                                  HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <TextBlock Text="Nexus" FontSize="20" FontWeight="SemiBold"
+                               Foreground="{StaticResource NexusForegroundBrush}"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+                <TextBlock Text="Zaloguj się do konta" FontSize="13"
+                           Foreground="{StaticResource NexusMutedForegroundBrush}"
+                           HorizontalAlignment="Center" Margin="0,0,0,10" />
+
+                <!-- Login -->
+                <TextBlock Text="Login" FontSize="12"
+                           Foreground="{StaticResource NexusMutedForegroundBrush}" />
+                <TextBox x:Name="LoginField"
+                         PlaceholderText="np. marekdev"
+                         Text="{x:Bind ViewModel.Login, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource NexusSearchBoxStyle}" />
+
+                <!-- Hasło -->
+                <TextBlock Text="Hasło" FontSize="12"
+                           Foreground="{StaticResource NexusMutedForegroundBrush}"
+                           Margin="0,4,0,0" />
+                <PasswordBox x:Name="PasswordField"
+                             PlaceholderText="Wprowadź hasło"
+                             PasswordChanged="PasswordField_PasswordChanged"
+                             KeyDown="PasswordField_KeyDown" />
+
+                <!-- Wskazówka demo -->
+                <TextBlock Text="Demo: marekdev / demo" FontSize="11"
+                           Foreground="{StaticResource NexusMutedForegroundBrush}"
+                           HorizontalAlignment="Right" Margin="0,2,0,0" />
+
+                <!-- Błąd -->
+                <Border Background="#202EF4444" CornerRadius="4" Padding="10,6"
+                        BorderBrush="{StaticResource NexusDestructiveBrush}" BorderThickness="1"
+                        Visibility="{x:Bind ViewModel.ErrorMessage, Mode=OneWay, Converter={StaticResource NullToVisibilityConverter}}">
+                    <TextBlock Text="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}"
+                               Foreground="{StaticResource NexusDestructiveBrush}"
+                               FontSize="12" TextWrapping="Wrap" />
+                </Border>
+
+                <!-- Submit -->
+                <Button x:Name="SubmitButton"
+                        Style="{StaticResource NexusPrimaryButtonStyle}"
+                        HorizontalAlignment="Stretch" Margin="0,8,0,0"
+                        Click="SubmitButton_Click">
+                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                        <ProgressRing Width="14" Height="14"
+                                      IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}"
+                                      Foreground="White"
+                                      Visibility="{x:Bind ViewModel.IsLoading, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <TextBlock Text="Zaloguj" FontSize="13" FontWeight="SemiBold" />
+                    </StackPanel>
+                </Button>
+
+                <!-- Link do rejestracji -->
+                <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center" Margin="0,12,0,0">
+                    <TextBlock Text="Nie masz konta?" FontSize="12"
+                               Foreground="{StaticResource NexusMutedForegroundBrush}"
+                               VerticalAlignment="Center" />
+                    <HyperlinkButton Content="Zarejestruj się" Padding="4,0" FontSize="12"
+                                     Click="GoToRegister_Click" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Page>

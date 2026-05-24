@@ -1,0 +1,38 @@
+﻿using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.Extensions.DependencyInjection;
+using Nexus.ViewModels;
+
+namespace Nexus.Views;
+
+public sealed partial class NotificationsPage : Page
+{
+    public NotificationsViewModel ViewModel { get; } = new();
+
+    public NotificationsPage()
+    {
+        InitializeComponent();
+        NotificationsListView.ItemsSource = ViewModel.Notifications;
+    }
+
+    private void Tab_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn)
+        {
+            var tag = btn.Tag?.ToString() ?? "all";
+            ViewModel.SelectedTab = tag;
+
+            TabAll.Foreground = tag == "all"
+                ? App.Current.Resources["NexusForegroundBrush"] as Microsoft.UI.Xaml.Media.Brush
+                : App.Current.Resources["NexusMutedForegroundBrush"] as Microsoft.UI.Xaml.Media.Brush;
+            TabMentions.Foreground = tag == "mentions"
+                ? App.Current.Resources["NexusForegroundBrush"] as Microsoft.UI.Xaml.Media.Brush
+                : App.Current.Resources["NexusMutedForegroundBrush"] as Microsoft.UI.Xaml.Media.Brush;
+
+            TabAll.FontWeight = tag == "all"
+                ? Microsoft.UI.Text.FontWeights.SemiBold : Microsoft.UI.Text.FontWeights.Normal;
+            TabMentions.FontWeight = tag == "mentions"
+                ? Microsoft.UI.Text.FontWeights.SemiBold : Microsoft.UI.Text.FontWeights.Normal;
+        }
+    }
+}

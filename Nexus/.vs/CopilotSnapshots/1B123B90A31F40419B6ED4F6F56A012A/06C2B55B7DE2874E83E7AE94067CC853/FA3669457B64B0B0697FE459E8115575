@@ -1,0 +1,355 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+    SettingsPage.xaml — Ustawienia konta, bezpieczeństwa, powiadomień, motywu, języka.
+    Odpowiednik: design/components/pages/SettingsPage.tsx
+    Sekcje grupowane w karty z etykietami uppercase.
+-->
+<Page
+    x:Class="Nexus.Views.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Background="Transparent">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel x:Name="Root" x:DataContext="{x:Bind ViewModel}">
+            <!-- Nagłówek -->
+            <Border BorderBrush="{StaticResource NexusBorderBrush}" BorderThickness="0,0,0,1"
+                    Background="{StaticResource NexusCardBrush}" Padding="16,12">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="Ustawienia" Style="{StaticResource NexusPageHeaderStyle}" />
+                    <TextBlock Text="Zarządzaj swoim kontem i preferencjami"
+                               Style="{StaticResource NexusPageSubtitleStyle}" />
+                </StackPanel>
+            </Border>
+
+            <StackPanel Padding="16" Spacing="20">
+
+                <!-- ═══ SEKCJA: KONTO ═══ -->
+                <StackPanel Spacing="6">
+                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="4,0">
+                        <FontIcon Glyph="&#xE77B;" FontSize="12"
+                                  Foreground="{StaticResource NexusMutedForegroundBrush}" />
+                        <TextBlock Text="KONTO" Style="{StaticResource NexusSectionLabelStyle}" />
+                    </StackPanel>
+                    <Border Style="{StaticResource NexusCardStyle}" Padding="0">
+                        <StackPanel>
+                            <!-- Login -->
+                            <Grid Padding="12" ColumnSpacing="12"
+                                  BorderBrush="{StaticResource NexusBorderBrush}" BorderThickness="0,0,0,1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Login" FontSize="13" FontWeight="Medium"
+                                               Foreground="{StaticResource NexusForegroundBrush}" />
+                                    <TextBlock Text="Users.Login" FontSize="10"
+                                               Foreground="{StaticResource NexusMutedForegroundBrush}" />
+                                </StackPanel>
+                                <TextBox Grid.Column="1" Text="{x:Bind User.Login, Mode=TwoWay}"
+                                         Style="{StaticResource NexusSearchBoxStyle}" />
+                            </Grid>
+                            <!-- Email -->
+                            <Grid Padding="12" ColumnSpacing="12"
+                                  BorderBrush="{StaticResource NexusBorderBrush}" BorderThickness="0,0,0,1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Email" FontSize="13" FontWeight="Medium"
+                                               Foreground="{StaticResource NexusForegroundBrush}" />
+                                    <TextBlock Text="Users.Email" FontSize="10"
+                                               Foreground="{StaticResource NexusMutedForegroundBrush}" />
+                                </StackPanel>
+                                <TextBox Grid.Column="1" Text="{x:Bind User.Email, Mode=TwoWay}"
+                                         Style="{StaticResource NexusSearchBoxStyle}" />
+                            </Grid>
+                            <!-- Imię -->
+                            <Grid Padding="12" ColumnSpacing="12"
+                                  BorderBrush="{StaticResource NexusBorderBrush}" BorderThickness="0,0,0,1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Imię" FontSize="13" FontWeight="Medium"
+                                           Foreground="{StaticResource NexusForegroundBrush}"
+                                           VerticalAlignment="Center" />
+                                <TextBox Grid.Column="1" Text="{x:Bind User.Imie, Mode=TwoWay}"
+                                         Style="{StaticResource NexusSearchBoxStyle}" />
+                            </Grid>
+                            <!-- Nazwisko -->
+                            <Grid Padding="12" ColumnSpacing="12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Nazwisko" FontSize="13" FontWeight="Medium"
+                                           Foreground="{StaticResource NexusForegroundBrush}"
+                                           VerticalAlignment="Center" />
+                                <TextBox Grid.Column="1" Text="{x:Bind User.Nazwisko, Mode=TwoWay}"
+                                         Style="{StaticResource NexusSearchBoxStyle}" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- ═══ SEKCJA: BEZPIECZEŃSTWO ═══ -->
+                <StackPanel Spacing="6">
+                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="4,0">
+                        <FontIcon Glyph="&#xE72E;" FontSize="12"
+                                  Foreground="{StaticResource NexusMutedForegroundBrush}" />
+                        <TextBlock Text="BEZPIECZEŃSTWO" Style="{StaticResource NexusSectionLabelStyle}" />
+                    </StackPanel>
+                    <Border Style="{StaticResource NexusCardStyle}" Padding="0">
+                        <StackPanel>
+                            <!-- Zmień hasło -->
+                            <Grid Padding="12" ColumnSpacing="12"
+                                  BorderBrush="{StaticResource NexusBorderBrush}" BorderThickness="0,0,0,1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Zmień hasło" FontSize="13" FontWeight="Medium"
+                                               Foreground="{StaticResource NexusForegroundBrush}" />
+                                    <TextBlock Text="Hasło zahashowane (Users.Haslo)" FontSize="11"
+                                               Foreground="{StaticResource NexusMutedForegroundBrush}" />
+                                </StackPanel>
+                                <Button Grid.Column="1" Style="{StaticResource NexusSecondaryButtonStyle}"
+                                        Padding="12,4" Command="{x:Bind ChangePasswordCommand}">
+                                    <TextBlock Text="Zmień" FontSize="12" />
+                                </Button>
+                            </Grid>
+                            <!-- 2FA -->
+                            <Grid Padding="12" ColumnSpacing="12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Weryfikacja dwuetapowa (2FA)" FontSize="13"
+                                               FontWeight="Medium"
+                                               Foreground="{StaticResource NexusForegroundBrush}" />
+                                    <TextBlock Text="Zwiększa bezpieczeństwo logowania" FontSize="11"
+                                               Foreground="{StaticResource NexusMutedForegroundBrush}" />
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="1" IsOn="False" MinWidth="0" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- ═══ SEKCJA: AKTYWNE SESJE ═══ -->
+                <StackPanel Spacing="6">
+                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="4,0">
+                        <FontIcon Glyph="&#xE72E;" FontSize="12"
+                                  Foreground="{StaticResource NexusMutedForegroundBrush}" />
+                        <TextBlock Text="AKTYWNE SESJE (USERSESSIONS)" Style="{StaticResource NexusSectionLabelStyle}" />
+                    </StackPanel>
+                    <Border Style="{StaticResource NexusCardStyle}" Padding="0">
+                        <StackPanel>
+                            <!-- Sesja 1: Windows (aktywna) -->
+                            <Grid Padding="12" ColumnSpacing="10"
+                                  BorderBrush="{StaticResource NexusBorderBrush}" BorderThickness="0,0,0,1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" Width="32" Height="32" CornerRadius="4"
+                                        Background="{StaticResource NexusAccentSurfaceBrush}">
+                                    <FontIcon Glyph="&#xE977;" FontSize="14"
+                                              Foreground="{StaticResource NexusMutedForegroundBrush}"
+                                              HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="2">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Text="Windows 11 · Chrome" FontSize="13" FontWeight="Medium"
+                                                   Foreground="{StaticResource NexusForegroundBrush}" />
+                                        <Border Background="#3022C55E" CornerRadius="3" Padding="6,1">
+                                            <TextBlock Text="AKTYWNA" FontSize="9" FontWeight="SemiBold"
+                                                       Foreground="{StaticResource NexusGreenBrush}" />
+                                        </Border>
+                                    </StackPanel>
+                                    <TextBlock Text="Warszawa, PL · wygasa 2026-06-04" FontSize="11"
+                                               Foreground="{StaticResource NexusMutedForegroundBrush}" />
+                                </StackPanel>
+                            </Grid>
+                            <!-- Sesja 2: iPhone -->
+                            <Grid Padding="12" ColumnSpacing="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" Width="32" Height="32" CornerRadius="4"
+                                        Background="{StaticResource NexusAccentSurfaceBrush}">
+                                    <FontIcon Glyph="&#xE8EA;" FontSize="14"
+                                              Foreground="{StaticResource NexusMutedForegroundBrush}"
+                                              HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="2">
+                                    <TextBlock Text="iPhone 15 · Safari" FontSize="13" FontWeight="Medium"
+                                               Foreground="{StaticResource NexusForegroundBrush}" />
+                                    <TextBlock Text="Kraków, PL · wygasa 2026-05-20" FontSize="11"
+                                               Foreground="{StaticResource NexusMutedForegroundBrush}" />
+                                </StackPanel>
+                                <Button Grid.Column="2" Background="Transparent" BorderThickness="0"
+                                        Padding="6" CornerRadius="4">
+                                    <FontIcon Glyph="&#xE74D;" FontSize="14"
+                                              Foreground="{StaticResource NexusDestructiveBrush}" />
+                                </Button>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- ═══ SEKCJA: POWIADOMIENIA ═══ -->
+                <StackPanel Spacing="6">
+                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="4,0">
+                        <FontIcon Glyph="&#xEA8F;" FontSize="12"
+                                  Foreground="{StaticResource NexusMutedForegroundBrush}" />
+                        <TextBlock Text="POWIADOMIENIA" Style="{StaticResource NexusSectionLabelStyle}" />
+                    </StackPanel>
+                    <Border Style="{StaticResource NexusCardStyle}" Padding="0">
+                        <StackPanel>
+                            <Grid Padding="12" ColumnSpacing="12"
+                                  BorderBrush="{StaticResource NexusBorderBrush}" BorderThickness="0,0,0,1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Powiadomienia email" FontSize="13" FontWeight="Medium"
+                                               Foreground="{StaticResource NexusForegroundBrush}" />
+                                    <TextBlock Text="UserSettings.EmailNotifications" FontSize="11"
+                                               Foreground="{StaticResource NexusMutedForegroundBrush}" />
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="1" IsOn="{x:Bind ViewModel.EmailNotifications, Mode=TwoWay}" MinWidth="0" />
+                            </Grid>
+                            <Grid Padding="12" ColumnSpacing="12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Powiadomienia push" FontSize="13" FontWeight="Medium"
+                                               Foreground="{StaticResource NexusForegroundBrush}" />
+                                    <TextBlock Text="UserSettings.PushNotifications" FontSize="11"
+                                               Foreground="{StaticResource NexusMutedForegroundBrush}" />
+                                </StackPanel>
+                                <ToggleSwitch Grid.Column="1" IsOn="{x:Bind ViewModel.PushNotifications, Mode=TwoWay}" MinWidth="0" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- ═══ SEKCJA: PRYWATNOŚĆ ═══ -->
+                <StackPanel Spacing="6">
+                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="4,0">
+                        <FontIcon Glyph="&#xE72E;" FontSize="12"
+                                  Foreground="{StaticResource NexusMutedForegroundBrush}" />
+                        <TextBlock Text="PRYWATNOŚĆ" Style="{StaticResource NexusSectionLabelStyle}" />
+                    </StackPanel>
+                    <Border Style="{StaticResource NexusCardStyle}" Padding="0">
+                        <Grid Padding="12" ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Poziom prywatności" FontSize="13" FontWeight="Medium"
+                                           Foreground="{StaticResource NexusForegroundBrush}" />
+                                <TextBlock Text="UserSettings.PrivacyLevel (enum)" FontSize="11"
+                                           Foreground="{StaticResource NexusMutedForegroundBrush}" />
+                            </StackPanel>
+                            <ComboBox Grid.Column="1" SelectedItem="{x:Bind ViewModel.PrivacyLevel, Mode=TwoWay}" MinWidth="120"
+                                      Background="{StaticResource NexusAccentSurfaceBrush}"
+                                      BorderBrush="{StaticResource NexusBorderBrush}"
+                                      CornerRadius="4" FontSize="12">
+                                <ComboBoxItem Content="Public" />
+                                <ComboBoxItem Content="Friends" />
+                                <ComboBoxItem Content="Private" />
+                            </ComboBox>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+
+                <!-- ═══ SEKCJA: WYGLĄD ═══ -->
+                <StackPanel Spacing="6">
+                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="4,0">
+                        <FontIcon Glyph="&#xE790;" FontSize="12"
+                                  Foreground="{StaticResource NexusMutedForegroundBrush}" />
+                        <TextBlock Text="WYGLĄD" Style="{StaticResource NexusSectionLabelStyle}" />
+                    </StackPanel>
+                    <Border Style="{StaticResource NexusCardStyle}" Padding="0">
+                        <Grid Padding="12" ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Motyw" FontSize="13" FontWeight="Medium"
+                                           Foreground="{StaticResource NexusForegroundBrush}" />
+                                <TextBlock Text="UserSettings.Theme" FontSize="11"
+                                           Foreground="{StaticResource NexusMutedForegroundBrush}" />
+                            </StackPanel>
+                            <ComboBox Grid.Column="1" SelectedItem="{x:Bind ViewModel.Theme, Mode=TwoWay}" MinWidth="120"
+                                      Background="{StaticResource NexusAccentSurfaceBrush}"
+                                      BorderBrush="{StaticResource NexusBorderBrush}"
+                                      CornerRadius="4" FontSize="12">
+                                <ComboBoxItem Content="Dark" />
+                                <ComboBoxItem Content="Light" />
+                                <ComboBoxItem Content="System" />
+                            </ComboBox>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+
+                <!-- ═══ SEKCJA: JĘZYK ═══ -->
+                <StackPanel Spacing="6">
+                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="4,0">
+                        <FontIcon Glyph="&#xE774;" FontSize="12"
+                                  Foreground="{StaticResource NexusMutedForegroundBrush}" />
+                        <TextBlock Text="JĘZYK" Style="{StaticResource NexusSectionLabelStyle}" />
+                    </StackPanel>
+                    <Border Style="{StaticResource NexusCardStyle}" Padding="0">
+                        <Grid Padding="12" ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Język interfejsu" FontSize="13" FontWeight="Medium"
+                                           Foreground="{StaticResource NexusForegroundBrush}" />
+                                <TextBlock Text="UserSettings.Language" FontSize="11"
+                                           Foreground="{StaticResource NexusMutedForegroundBrush}" />
+                            </StackPanel>
+                            <ComboBox Grid.Column="1" SelectedItem="{x:Bind ViewModel.Language, Mode=TwoWay}" MinWidth="120"
+                                      Background="{StaticResource NexusAccentSurfaceBrush}"
+                                      BorderBrush="{StaticResource NexusBorderBrush}"
+                                      CornerRadius="4" FontSize="12">
+                                <ComboBoxItem Content="pl-PL" />
+                                <ComboBoxItem Content="en-US" />
+                                <ComboBoxItem Content="de-DE" />
+                            </ComboBox>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+
+                <!-- Przycisk wylogowania -->
+                        <Button Style="{StaticResource NexusDestructiveButtonStyle}"
+                                HorizontalAlignment="Stretch" Padding="12,10"
+                                Command="{x:Bind LogoutCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <FontIcon Glyph="&#xF3B1;" FontSize="14"
+                                  Foreground="{StaticResource NexusDestructiveBrush}" />
+                        <TextBlock Text="Wyloguj się" FontSize="13" FontWeight="Medium"
+                                   Foreground="{StaticResource NexusDestructiveBrush}" />
+                    </StackPanel>
+                </Button>
+
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

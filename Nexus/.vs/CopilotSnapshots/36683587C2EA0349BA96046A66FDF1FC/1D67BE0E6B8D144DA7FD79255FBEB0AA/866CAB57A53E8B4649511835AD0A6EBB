@@ -1,0 +1,327 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Nexus.Data;
+using Nexus.Helpers;
+using Nexus.Models;
+
+namespace Nexus.ViewModels;
+
+/// <summary>
+/// ViewModel strony głównej — feed postów z zakładkami "Dla Ciebie" / "Obserwowani".
+/// </summary>
+public partial class HomeViewModel : ObservableObject
+{
+    private readonly NexusDataService _dataService;
+    private readonly int _currentUserId;
+    [ObservableProperty]
+    private string _selectedTab = "forYou";
+
+    [ObservableProperty]
+    private string _composeText = string.Empty;
+
+    public ObservableCollection<Post> Posts { get; }
+
+    /// <summary>
+    /// Pozostała liczba znaków w polu compose (max 280).
+    /// </summary>
+    public int RemainingChars => 280 - ComposeText.Length;
+
+    public HomeViewModel(NexusDataService dataService)
+    {
+        _dataService = dataService;
+        _currentUserId = _dataService.GetCurrentUserId();
+        Posts = new ObservableCollection<Post>(_dataService.GetFeedPosts());
+    }
+
+    partial void OnComposeTextChanged(string value)
+    {
+        OnPropertyChanged(nameof(RemainingChars));
+        PublishCommand.NotifyCanExecuteChanged();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanPublish))]
+    private void Publish()
+    {
+        if (string.IsNullOrWhiteSpace(ComposeText)) return;
+
+        var newPost = _dataService.AddPost(_currentUserId, ComposeText);
+        Posts.Insert(0, newPost);
+        ComposeText = string.Empty;
+    }
+
+    private bool CanPublish() => !string.IsNullOrWhiteSpace(ComposeText);
+}
+
+/// <summary>
+/// ViewModel strony Explore — wyszukiwanie i popularne hashtagi.
+/// </summary>
+public partial class ExploreViewModel : ObservableObject
+{
+    private readonly NexusDataService _dataService;
+    [ObservableProperty]
+    private string _searchQuery = string.Empty;
+
+    [ObservableProperty]
+    private string _selectedCategory = "Wszystko";
+
+    public ObservableCollection<string> Categories { get; } =
+        new(["Wszystko", "Technologia", "Gaming", "Muzyka", "Sport", "Nauka"]);
+
+    public ObservableCollection<TrendingHashtag> TrendingHashtags { get; }
+
+    public ExploreViewModel(NexusDataService dataService)
+    {
+        _dataService = dataService;
+        TrendingHashtags = new ObservableCollection<TrendingHashtag>(_dataService.GetTrendingHashtags());
+    }
+
+    [RelayCommand]
+    private void SelectCategory(string category)
+    {
+        SelectedCategory = category;
+    }
+}
+
+/// <summary>
+/// ViewModel powiadomień z zakładkami Wszystkie / Wzmianki.
+/// </summary>
+public partial class NotificationsViewModel : ObservableObject
+{
+    private readonly NexusDataService _dataService;
+    private readonly int _currentUserId;
+    [ObservableProperty]
+    private string _selectedTab = "all";
+
+    private readonly List<Notification> _allNotifications;
+
+    public ObservableCollection<Notification> Notifications { get; }
+
+    public NotificationsViewModel(NexusDataService dataService)
+    {
+        _dataService = dataService;
+        _currentUserId = _dataService.GetCurrentUserId();
+        _allNotifications = _dataService.GetNotifications(_currentUserId);
+        Notifications = new ObservableCollection<Notification>(_allNotifications);
+    }
+
+    partial void OnSelectedTabChanged(string value)
+    {
+        Notifications.Clear();
+        var filtered = value == "mentions"
+            ? _allNotifications.Where(n => n.Type == "Mention")
+            : _allNotifications;
+
+        foreach (var n in filtered)
+            Notifications.Add(n);
+    }
+
+    /// <summary>
+    /// Zwraca glyph ikony Segoe MDL2 Assets na podstawie typu powiadomienia.
+    /// </summary>
+    public static string GetNotificationIcon(string type) => type switch
+    {
+        "Like" => "\uEB51",      // Heart
+        "Follow" => "\uE8FA",    // AddFriend
+        "Repost" => "\uE8EB",    // RepeatAll
+        "Reply" => "\uE8BD",     // Comment
+        "Mention" => "\uE910",   // Mention
+        _ => "\uE7C8",           // ActionCenter
+    };
+
+    /// <summary>
+    /// Zwraca etykietę po polsku na podstawie typu powiadomienia.
+    /// </summary>
+    public static string GetNotificationLabel(string type) => type switch
+    {
+        "Like" => "polubił(a) Twój post",
+        "Follow" => "zaczął(-ęła) Cię obserwować",
+        "Repost" => "udostępnił(a) Twój post",
+        "Reply" => "odpowiedział(a) na komentarz",
+        "Mention" => "wspomniał(a) o Tobie",
+        _ => "",
+    };
+}
+
+/// <summary>
+/// ViewModel wiadomości — lista konwersacji + okno czatu.
+/// </summary>
+public partial class MessagesViewModel : ObservableObject
+{
+    private readonly NexusDataService _dataService;
+    private readonly int _currentUserId;
+    [ObservableProperty]
+    private Conversation? _selectedConversation;
+
+    [ObservableProperty]
+    private string _messageText = string.Empty;
+
+    [ObservableProperty]
+    private string _searchQuery = string.Empty;
+
+    public ObservableCollection<Conversation> Conversations { get; }
+
+    public ObservableCollection<ChatMessage> ChatMessages { get; }
+
+    public MessagesViewModel(NexusDataService dataService)
+    {
+        _dataService = dataService;
+        _currentUserId = _dataService.GetCurrentUserId();
+        Conversations = new ObservableCollection<Conversation>(_dataService.GetConversations(_currentUserId));
+        ChatMessages = new ObservableCollection<ChatMessage>();
+    }
+
+    public bool HasSelectedConversation => SelectedConversation != null;
+
+    partial void OnSelectedConversationChanged(Conversation? value)
+    {
+        OnPropertyChanged(nameof(HasSelectedConversation));
+
+        ChatMessages.Clear();
+        if (value != null && int.TryParse(value.Id, out var conversationId))
+        {
+            foreach (var message in _dataService.GetMessages(conversationId))
+            {
+                ChatMessages.Add(message);
+            }
+        }
+    }
+
+    [RelayCommand]
+    private void SendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(MessageText)) return;
+
+        if (SelectedConversation == null || !int.TryParse(SelectedConversation.Id, out var conversationId))
+        {
+            return;
+        }
+
+        var message = _dataService.AddMessage(conversationId, _currentUserId, MessageText);
+        ChatMessages.Add(message);
+
+        MessageText = string.Empty;
+    }
+}
+
+/// <summary>
+/// ViewModel profilu użytkownika.
+/// </summary>
+public partial class ProfileViewModel : ObservableObject
+{
+    private readonly NexusDataService _dataService;
+    private readonly int _currentUserId;
+    [ObservableProperty]
+    private string _selectedTab = "posts";
+
+    public UserProfile User { get; }
+
+    public ObservableCollection<Post> Posts { get; }
+
+    public ProfileViewModel(NexusDataService dataService)
+    {
+        _dataService = dataService;
+        _currentUserId = _dataService.GetCurrentUserId();
+        User = _dataService.GetCurrentUserProfile();
+        Posts = new ObservableCollection<Post>(_dataService.GetUserPosts(_currentUserId));
+    }
+
+    public string JoinedDate
+    {
+        get
+        {
+            if (DateTime.TryParse(User.DataUtworzenia, out var d))
+                return d.ToString("MMMM yyyy", new System.Globalization.CultureInfo("pl-PL"));
+            return User.DataUtworzenia;
+        }
+    }
+
+    public string BirthDate
+    {
+        get
+        {
+            if (DateTime.TryParse(User.DataUrodzenia, out var d))
+                return d.ToString("dd.MM.yyyy");
+            return User.DataUrodzenia;
+        }
+    }
+}
+
+/// <summary>
+/// ViewModel zakładek (bookmarks).
+/// </summary>
+public partial class BookmarksViewModel : ObservableObject
+{
+    private readonly NexusDataService _dataService;
+    private readonly int _currentUserId;
+    public ObservableCollection<Post> Posts { get; }
+
+    public string Subtitle => $"@{_dataService.GetCurrentUserProfile().Login} · {Posts.Count} zapisanych postów";
+
+    public BookmarksViewModel(NexusDataService dataService)
+    {
+        _dataService = dataService;
+        _currentUserId = _dataService.GetCurrentUserId();
+        Posts = new ObservableCollection<Post>(_dataService.GetBookmarkedPosts(_currentUserId));
+    }
+}
+
+/// <summary>
+/// ViewModel ustawień — sekcje konta, bezpieczeństwa, powiadomień, prywatności, motywu.
+/// </summary>
+public partial class SettingsViewModel : ObservableObject
+{
+    private readonly NexusDataService _dataService;
+    private readonly int _currentUserId;
+    [ObservableProperty]
+    private bool _emailNotifications = true;
+
+    [ObservableProperty]
+    private bool _pushNotifications = true;
+
+    [ObservableProperty]
+    private string _privacyLevel = "Public";
+
+    [ObservableProperty]
+    private string _theme = "Dark";
+
+    [ObservableProperty]
+    private string _language = "pl-PL";
+
+    public UserProfile User { get; }
+
+    public ObservableCollection<UserSession> Sessions { get; }
+
+    public List<string> PrivacyOptions { get; } = ["Public", "Friends", "Private"];
+    public List<string> ThemeOptions { get; } = ["Dark", "Light", "System"];
+    public List<string> LanguageOptions { get; } = ["pl-PL", "en-US", "de-DE"];
+
+    public SettingsViewModel(NexusDataService dataService)
+    {
+        _dataService = dataService;
+        _currentUserId = _dataService.GetCurrentUserId();
+        User = _dataService.GetCurrentUserProfile();
+        Sessions = new ObservableCollection<UserSession>(_dataService.GetSessions(_currentUserId));
+    }
+}
+
+/// <summary>
+/// ViewModel głównego okna — nawigacja między stronami.
+/// </summary>
+public partial class ShellViewModel : ObservableObject
+{
+    private readonly NexusDataService _dataService;
+    [ObservableProperty]
+    private string _searchQuery = string.Empty;
+
+    public UserProfile CurrentUser { get; }
+
+    public ShellViewModel(NexusDataService dataService)
+    {
+        _dataService = dataService;
+        CurrentUser = _dataService.GetCurrentUserProfile();
+    }
+}

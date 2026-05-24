@@ -1,0 +1,69 @@
+﻿using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Nexus.ViewModels;
+
+namespace Nexus.Views;
+
+/// <summary>
+/// Code-behind strony głównej — minimalna logika UI (zakładki, compose).
+/// Dane i komendy obsługiwane przez HomeViewModel.
+/// </summary>
+public sealed partial class HomePage : Page
+{
+    public HomeViewModel ViewModel { get; } = new();
+
+    public HomePage()
+    {
+        InitializeComponent();
+        PostsListView.ItemsSource = ViewModel.Posts;
+    }
+
+    /// <summary>
+    /// Przełączanie zakładek "Dla Ciebie" / "Obserwowani".
+    /// </summary>
+    private void Tab_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn)
+        {
+            var tag = btn.Tag?.ToString() ?? "forYou";
+            ViewModel.SelectedTab = tag;
+
+            // Aktualizacja wizualna zakładek
+            TabForYou.Foreground = tag == "forYou"
+                ? (Microsoft.UI.Xaml.Media.Brush)Resources["NexusForegroundBrush"]
+                    ?? App.Current.Resources["NexusForegroundBrush"] as Microsoft.UI.Xaml.Media.Brush
+                : App.Current.Resources["NexusMutedForegroundBrush"] as Microsoft.UI.Xaml.Media.Brush;
+
+            TabFollowing.Foreground = tag == "following"
+                ? App.Current.Resources["NexusForegroundBrush"] as Microsoft.UI.Xaml.Media.Brush
+                : App.Current.Resources["NexusMutedForegroundBrush"] as Microsoft.UI.Xaml.Media.Brush;
+
+            TabForYou.FontWeight = tag == "forYou"
+                ? Microsoft.UI.Text.FontWeights.SemiBold
+                : Microsoft.UI.Text.FontWeights.Normal;
+
+            TabFollowing.FontWeight = tag == "following"
+                ? Microsoft.UI.Text.FontWeights.SemiBold
+                : Microsoft.UI.Text.FontWeights.Normal;
+        }
+    }
+
+    private void ComposeTextBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        var text = ComposeTextBox.Text;
+        ViewModel.ComposeText = text;
+        CharCountText.Text = ViewModel.RemainingChars.ToString();
+        PublishButton.IsEnabled = !string.IsNullOrWhiteSpace(text);
+
+        // Podświetlenie na pomarańczowo gdy mało znaków
+        CharCountText.Foreground = ViewModel.RemainingChars < 30
+            ? App.Current.Resources["NexusOrangeBrush"] as Microsoft.UI.Xaml.Media.Brush
+            : App.Current.Resources["NexusMutedForegroundBrush"] as Microsoft.UI.Xaml.Media.Brush;
+    }
+
+    private void PublishButton_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel.PublishCommand.Execute(null);
+        ComposeTextBox.Text = string.Empty;
+    }
+}

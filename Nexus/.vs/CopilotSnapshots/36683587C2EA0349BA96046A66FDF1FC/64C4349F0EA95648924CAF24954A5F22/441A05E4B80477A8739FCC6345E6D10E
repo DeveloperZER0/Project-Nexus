@@ -1,0 +1,66 @@
+﻿using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
+using Nexus.Models;
+using Nexus.ViewModels;
+
+namespace Nexus.Views;
+
+public sealed partial class MessagesPage : Page
+{
+    public MessagesViewModel ViewModel { get; } = new();
+
+    public MessagesPage()
+    {
+        InitializeComponent();
+        ConversationsListView.ItemsSource = ViewModel.Conversations;
+        ChatMessagesListView.ItemsSource = ViewModel.ChatMessages;
+    }
+
+    /// <summary>
+    /// Wybór konwersacji — aktualizacja nagłówka czatu i widoczności paneli.
+    /// </summary>
+    private void ConversationsListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (ConversationsListView.SelectedItem is Conversation conv)
+        {
+            ViewModel.SelectedConversation = conv;
+
+            // Pokaż nagłówek czatu
+            ChatHeader.Visibility = Visibility.Visible;
+            ChatMessagesListView.Visibility = Visibility.Visible;
+            ChatInputBar.Visibility = Visibility.Visible;
+            ChatPlaceholder.Visibility = Visibility.Collapsed;
+
+            // Aktualizuj dane nagłówka
+            ChatDisplayName.Text = conv.DisplayName;
+            ChatLogin.Text = $"@{conv.Login}";
+
+            // Awatar kontaktu w nagłówku
+            try
+            {
+                ChatAvatarBorder.Background = new ImageBrush
+                {
+                    ImageSource = new BitmapImage(new Uri(conv.AvatarUrl))
+                    {
+                        CreateOptions = BitmapCreateOptions.IgnoreImageCache,
+                        DecodePixelWidth = 72,
+                    },
+                    Stretch = Stretch.UniformToFill,
+                };
+            }
+            catch
+            {
+                // Gracefully handle image loading errors
+            }
+        }
+    }
+
+    private void SendButton_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel.MessageText = MessageInput.Text;
+        ViewModel.SendMessageCommand.Execute(null);
+        MessageInput.Text = string.Empty;
+    }
+}

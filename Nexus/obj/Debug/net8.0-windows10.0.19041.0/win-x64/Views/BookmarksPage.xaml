@@ -1,0 +1,122 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+    BookmarksPage.xaml — Zapisane posty (zakładki).
+    Odpowiednik: design/components/pages/BookmarksPage.tsx
+-->
+<Page
+    x:Class="Nexus.Views.BookmarksPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:models="using:Nexus.Models"
+    Background="Transparent">
+
+    <Page.Resources>
+        <DataTemplate x:Key="PostCardTemplate"                         >
+            <Border x:ConnectionId='3' Padding="14" BorderBrush="{StaticResource NexusBorderBrush}"
+                    BorderThickness="0,0,0,1" Background="Transparent">
+                <Grid ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Width="40" Height="40" CornerRadius="20"
+                            BorderBrush="{StaticResource NexusBorderBrush}" BorderThickness="1"
+                            VerticalAlignment="Top">
+                        <Border.Background>
+                            <ImageBrush Stretch="UniformToFill">
+                                <ImageBrush.ImageSource>
+                                    <BitmapImage x:ConnectionId='18'                                      
+                                                 DecodePixelWidth="80" CreateOptions="IgnoreImageCache" />
+                                </ImageBrush.ImageSource>
+                            </ImageBrush>
+                        </Border.Background>
+                    </Border>
+                    <StackPanel Grid.Column="1" Spacing="4">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock x:ConnectionId='15'                                   
+                                       Style="{StaticResource NexusDisplayNameStyle}" />
+                            <TextBlock FontSize="12" Foreground="{StaticResource NexusMutedForegroundBrush}">
+                                <Run x:ConnectionId='16'                                />
+                                <Run Text=" · " />
+                                <Run x:ConnectionId='17'                                />
+                            </TextBlock>
+                        </StackPanel>
+                        <TextBlock x:ConnectionId='4'                       Style="{StaticResource NexusBodyStyle}"
+                                   FontSize="14" LineHeight="21" />
+                        <ItemsRepeater x:ConnectionId='5'                                 Margin="0,4,0,0">
+                            <ItemsRepeater.Layout>
+                                <StackLayout Orientation="Horizontal" Spacing="6" />
+                            </ItemsRepeater.Layout>
+                            <ItemsRepeater.ItemTemplate>
+                                <DataTemplate                      >
+                                    <Border x:ConnectionId='13' Style="{StaticResource NexusHashtagChipStyle}">
+                                        <TextBlock FontSize="11" FontWeight="Medium"
+                                                   Foreground="{StaticResource NexusVioletLightBrush}">
+                                            <Run Text="#" /><Run x:ConnectionId='14'                 />
+                                        </TextBlock>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsRepeater.ItemTemplate>
+                        </ItemsRepeater>
+                        <StackPanel Orientation="Horizontal" Spacing="2" Margin="0,6,0,0">
+                            <Button Background="Transparent" BorderThickness="0" Padding="6,4" CornerRadius="4">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE8BD;" FontSize="14" Foreground="{StaticResource NexusMutedForegroundBrush}" />
+                                    <TextBlock x:ConnectionId='11'                               FontSize="11" Foreground="{StaticResource NexusMutedForegroundBrush}" />
+                                </StackPanel>
+                            </Button>
+                            <Button x:ConnectionId='6' Background="Transparent" BorderThickness="0" Padding="6,4" CornerRadius="4"
+                                                                             >
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE8EB;" FontSize="14" Foreground="{StaticResource NexusMutedForegroundBrush}" />
+                                    <TextBlock x:ConnectionId='10'                               FontSize="11" Foreground="{StaticResource NexusMutedForegroundBrush}" />
+                                </StackPanel>
+                            </Button>
+                            <Button x:ConnectionId='7' Background="Transparent" BorderThickness="0" Padding="6,4" CornerRadius="4"
+                                                                           >
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xEB51;" FontSize="14" Foreground="{StaticResource NexusMutedForegroundBrush}" />
+                                    <TextBlock x:ConnectionId='9'                            FontSize="11" Foreground="{StaticResource NexusMutedForegroundBrush}" />
+                                </StackPanel>
+                            </Button>
+                            <!-- Usuń z zakładek -->
+                            <Button x:ConnectionId='8' Background="Transparent" BorderThickness="0" Padding="6,4" CornerRadius="4"
+                                                                                     
+                                    ToolTipService.ToolTip="Usuń z zakładek">
+                                <FontIcon Glyph="&#xE8A4;" FontSize="14" Foreground="{StaticResource NexusVioletBrush}" />
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </Page.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel>
+            <!-- Nagłówek -->
+            <Border BorderBrush="{StaticResource NexusBorderBrush}" BorderThickness="0,0,0,1"
+                    Background="{StaticResource NexusCardBrush}" Padding="16,12">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="Zakładki" Style="{StaticResource NexusPageHeaderStyle}" />
+                    <TextBlock x:ConnectionId='20' x:Name="SubtitleText" Style="{StaticResource NexusPageSubtitleStyle}" />
+                </StackPanel>
+            </Border>
+
+            <!-- Lista zapisanych postów -->
+            <ListView x:ConnectionId='19' x:Name="BookmarksListView"
+                      SelectionMode="None" IsItemClickEnabled="False"
+                      ItemTemplate="{StaticResource PostCardTemplate}">
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="Padding" Value="0" />
+                        <Setter Property="Margin" Value="0" />
+                        <Setter Property="MinHeight" Value="0" />
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    </Style>
+                </ListView.ItemContainerStyle>
+            </ListView>
+        </StackPanel>
+    </ScrollViewer>
+</Page>
+

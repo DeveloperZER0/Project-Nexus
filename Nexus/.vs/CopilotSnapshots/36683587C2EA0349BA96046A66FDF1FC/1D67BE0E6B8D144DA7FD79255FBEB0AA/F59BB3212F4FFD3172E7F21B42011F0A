@@ -1,0 +1,17 @@
+﻿using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml;
+using Microsoft.Extensions.DependencyInjection;
+using Nexus.ViewModels;
+
+namespace Nexus.Views;
+
+public sealed partial class ExplorePage : Page
+{
+    public ExploreViewModel ViewModel { get; } = new();
+
+    public ExplorePage()
+    {
+        InitializeComponent();
+        HashtagsListView.ItemsSource = ViewModel.TrendingHashtags;
+    }
+}

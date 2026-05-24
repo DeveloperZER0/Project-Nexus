@@ -1,0 +1,160 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Nexus.Data.Entities;
+
+namespace Nexus.Data;
+
+public class NexusDbContext : DbContext
+{
+    public NexusDbContext(DbContextOptions<NexusDbContext> options) : base(options)
+    {
+    }
+
+    public DbSet<UserEntity> Users => Set<UserEntity>();
+    public DbSet<UserProfileEntity> UserProfiles => Set<UserProfileEntity>();
+    public DbSet<PostEntity> Posts => Set<PostEntity>();
+    public DbSet<PostHashtagEntity> PostHashtags => Set<PostHashtagEntity>();
+    public DbSet<NotificationEntity> Notifications => Set<NotificationEntity>();
+    public DbSet<ConversationEntity> Conversations => Set<ConversationEntity>();
+    public DbSet<ConversationParticipantEntity> ConversationParticipants => Set<ConversationParticipantEntity>();
+    public DbSet<MessageEntity> Messages => Set<MessageEntity>();
+    public DbSet<BookmarkEntity> Bookmarks => Set<BookmarkEntity>();
+    public DbSet<FollowEntity> Follows => Set<FollowEntity>();
+    public DbSet<UserSessionEntity> Sessions => Set<UserSessionEntity>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<UserEntity>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Login).IsUnique();
+            entity.HasIndex(e => e.Email).IsUnique();
+            entity.Property(e => e.Login).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Email).IsRequired().HasMaxLength(120);
+            entity.Property(e => e.PasswordHash).IsRequired().HasMaxLength(200);
+        });
+
+        modelBuilder.Entity<UserProfileEntity>(entity =>
+        {
+            entity.HasKey(e => e.UserId);
+            entity.Property(e => e.FirstName).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.LastName).IsRequired().HasMaxLength(80);
+            entity.Property(e => e.Bio).HasMaxLength(500);
+            entity.Property(e => e.Location).HasMaxLength(120);
+            entity.Property(e => e.Website).HasMaxLength(200);
+            entity.Property(e => e.AvatarUrl).HasMaxLength(500);
+            entity.HasOne(e => e.User)
+                .WithOne(e => e.Profile)
+                .HasForeignKey<UserProfileEntity>(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<PostEntity>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Text).IsRequired().HasMaxLength(1000);
+            entity.Property(e => e.MediaUrl).HasMaxLength(500);
+            entity.HasOne(e => e.Author)
+                .WithMany(e => e.Posts)
+                .HasForeignKey(e => e.AuthorId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<PostHashtagEntity>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Tag).IsRequired().HasMaxLength(60);
+            entity.HasIndex(e => new { e.PostId, e.Tag }).IsUnique();
+            entity.HasOne(e => e.Post)
+                .WithMany(e => e.Hashtags)
+                .HasForeignKey(e => e.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<NotificationEntity>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Type).IsRequired().HasMaxLength(40);
+            entity.Property(e => e.Preview).HasMaxLength(300);
+            entity.HasOne(e => e.Recipient)
+                .WithMany(e => e.Notifications)
+                .HasForeignKey(e => e.RecipientId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Actor)
+                .WithMany()
+                .HasForeignKey(e => e.ActorId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<ConversationEntity>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.LastMessage).HasMaxLength(500);
+        });
+
+        modelBuilder.Entity<ConversationParticipantEntity>(entity =>
+        {
+            entity.HasKey(e => new { e.ConversationId, e.UserId });
+            entity.HasOne(e => e.Conversation)
+                .WithMany(e => e.Participants)
+                .HasForeignKey(e => e.ConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.User)
+                .WithMany(e => e.ConversationParticipants)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<MessageEntity>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Text).IsRequired().HasMaxLength(1000);
+            entity.HasOne(e => e.Conversation)
+                .WithMany(e => e.Messages)
+                .HasForeignKey(e => e.ConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Sender)
+                .WithMany(e => e.Messages)
+                .HasForeignKey(e => e.SenderId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<BookmarkEntity>(entity =>
+        {
+            entity.HasKey(e => new { e.UserId, e.PostId });
+            entity.HasOne(e => e.User)
+                .WithMany(e => e.Bookmarks)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Post)
+                .WithMany(e => e.Bookmarks)
+                .HasForeignKey(e => e.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<FollowEntity>(entity =>
+        {
+            entity.HasKey(e => new { e.FollowerId, e.FollowingId });
+            entity.HasOne(e => e.Follower)
+                .WithMany(e => e.Following)
+                .HasForeignKey(e => e.FollowerId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Following)
+                .WithMany(e => e.Followers)
+                .HasForeignKey(e => e.FollowingId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<UserSessionEntity>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Device).IsRequired().HasMaxLength(120);
+            entity.Property(e => e.IconGlyph).HasMaxLength(10);
+            entity.Property(e => e.Location).HasMaxLength(120);
+            entity.Property(e => e.Expiry).HasMaxLength(40);
+            entity.HasOne(e => e.User)
+                .WithMany(e => e.Sessions)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+}

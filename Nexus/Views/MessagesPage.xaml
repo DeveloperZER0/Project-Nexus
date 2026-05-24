@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    MessagesPage.xaml — Wiadomości: lista konwersacji + widok czatu.
+    Odpowiednik: design/components/pages/MessagesPage.tsx
+    Layout: dwie kolumny — lista konwersacji (lewa) i okno czatu (prawa).
+-->
+<Page
+    x:Class="Nexus.Views.MessagesPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:models="using:Nexus.Models"
+    xmlns:helpers="using:Nexus.Helpers"
+    Background="Transparent">
+
+    <Page.Resources>
+        <!-- Konwertery muszą być w zasięgu Page.Resources żeby działały w DataTemplate (kompilator x:Bind) -->
+        <helpers:BoolToAlignmentConverter x:Key="BoolToAlignmentConverter" />
+        <helpers:BoolToBrushConverter x:Key="BoolToBrushConverter" />
+        <helpers:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" />
+    </Page.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <!-- Lista konwersacji -->
+            <ColumnDefinition Width="280" />
+            <ColumnDefinition Width="Auto" />
+            <!-- Okno czatu -->
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- ═══ LISTA KONWERSACJI ═══ -->
+        <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Nagłówek + wyszukiwarka -->
+            <StackPanel Grid.Row="0" Padding="12" Spacing="8"
+                        BorderBrush="{StaticResource NexusBorderBrush}" BorderThickness="0,0,0,1">
+                <Grid>
+                    <TextBlock Text="Wiadomości" Style="{StaticResource NexusPageHeaderStyle}" />
+                    <Button HorizontalAlignment="Right" Background="Transparent" BorderThickness="0"
+                            Padding="6" CornerRadius="4">
+                        <FontIcon Glyph="&#xE713;" FontSize="14"
+                                  Foreground="{StaticResource NexusMutedForegroundBrush}" />
+                    </Button>
+                </Grid>
+                <Grid>
+                    <TextBox PlaceholderText="Szukaj konwersacji..."
+                             Style="{StaticResource NexusSearchBoxStyle}"
+                             Padding="28,6,8,6" />
+                    <FontIcon Glyph="&#xE721;" FontSize="12"
+                              Foreground="{StaticResource NexusMutedForegroundBrush}"
+                              HorizontalAlignment="Left" VerticalAlignment="Center"
+                              Margin="8,0,0,0" />
+                </Grid>
+            </StackPanel>
+
+            <!-- Lista konwersacji -->
+            <ListView Grid.Row="1" x:Name="ConversationsListView"
+                      SelectionMode="Single" SelectionChanged="ConversationsListView_SelectionChanged">
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="Padding" Value="0" />
+                        <Setter Property="Margin" Value="0" />
+                        <Setter Property="MinHeight" Value="0" />
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="models:Conversation">
+                        <Border Padding="12" BorderBrush="{StaticResource NexusBorderBrush}"
+                                BorderThickness="0,0,0,1">
+                            <Grid ColumnSpacing="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Awatar -->
+                                <Border Grid.Column="0" Width="40" Height="40" CornerRadius="20"
+                                        BorderBrush="{StaticResource NexusBorderBrush}" BorderThickness="1">
+                                    <Border.Background>
+                                        <ImageBrush Stretch="UniformToFill">
+                                            <ImageBrush.ImageSource>
+                                                <BitmapImage UriSource="{x:Bind AvatarUrl}"
+                                                             DecodePixelWidth="80" CreateOptions="IgnoreImageCache" />
+                                            </ImageBrush.ImageSource>
+                                        </ImageBrush>
+                                    </Border.Background>
+                                </Border>
+
+                                <!-- Nazwa i ostatnia wiadomość -->
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                    <Grid>
+                                        <TextBlock Text="{x:Bind DisplayName}"
+                                                   FontWeight="SemiBold" FontSize="12"
+                                                   Foreground="{StaticResource NexusForegroundBrush}"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{x:Bind Time}" FontSize="10"
+                                                   Foreground="{StaticResource NexusMutedForegroundBrush}"
+                                                   HorizontalAlignment="Right" />
+                                    </Grid>
+                                    <TextBlock Text="{x:Bind LastMessage}" FontSize="12"
+                                               Foreground="{StaticResource NexusMutedForegroundBrush}"
+                                               TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+
+                                <!-- Kropka nieprzeczytane (widoczna tylko gdy IsRead=false) -->
+                                <Ellipse Grid.Column="2" Width="8" Height="8"
+                                         Fill="{StaticResource NexusVioletBrush}"
+                                         VerticalAlignment="Center"
+                                         Visibility="{x:Bind IsRead, Converter={StaticResource InverseBoolToVisibilityConverter}}" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </Grid>
+
+        <!-- Separator -->
+        <Border Grid.Column="1" Width="1" Background="{StaticResource NexusBorderBrush}" />
+
+        <!-- ═══ OKNO CZATU ═══ -->
+        <Grid Grid.Column="2" x:Name="ChatPanel">
+            <Grid.RowDefinitions>
+                <!-- Nagłówek czatu -->
+                <RowDefinition Height="Auto" />
+                <!-- Wiadomości -->
+                <RowDefinition Height="*" />
+                <!-- Pole wprowadzania -->
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- Nagłówek czatu (wybrany kontakt) -->
+            <Border Grid.Row="0" x:Name="ChatHeader" Padding="12"
+                    BorderBrush="{StaticResource NexusBorderBrush}" BorderThickness="0,0,0,1"
+                    Visibility="Collapsed">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Border x:Name="ChatAvatarBorder" Width="36" Height="36" CornerRadius="18"
+                            BorderBrush="{StaticResource NexusBorderBrush}" BorderThickness="1" />
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock x:Name="ChatDisplayName" FontWeight="SemiBold" FontSize="13"
+                                   Foreground="{StaticResource NexusForegroundBrush}" />
+                        <TextBlock x:Name="ChatLogin" FontSize="11"
+                                   Foreground="{StaticResource NexusMutedForegroundBrush}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Wiadomości czatu -->
+            <ListView Grid.Row="1" x:Name="ChatMessagesListView"
+                      SelectionMode="None" IsItemClickEnabled="False"
+                      Padding="12" Visibility="Collapsed">
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="Padding" Value="0" />
+                        <Setter Property="Margin" Value="0,2" />
+                        <Setter Property="MinHeight" Value="0" />
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="models:ChatMessage">
+                        <Border Padding="10,8" CornerRadius="6" MaxWidth="400"
+                                HorizontalAlignment="{x:Bind IsOwn, Converter={StaticResource BoolToAlignmentConverter}, FallbackValue=Left}">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="{x:Bind Tekst}" FontSize="13" TextWrapping="Wrap"
+                                           Foreground="{StaticResource NexusForegroundBrush}" />
+                                <TextBlock Text="{x:Bind Time}" FontSize="10"
+                                           Foreground="{StaticResource NexusMutedForegroundBrush}"
+                                           HorizontalAlignment="Right" />
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+
+            <!-- Placeholder gdy brak wybranej konwersacji -->
+            <StackPanel Grid.Row="1" x:Name="ChatPlaceholder"
+                        HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
+                <TextBlock Text="Wybierz konwersację" FontSize="16" FontWeight="SemiBold"
+                           Foreground="{StaticResource NexusMutedForegroundBrush}"
+                           HorizontalAlignment="Center" />
+                <TextBlock Text="Zacznij rozmowę z kimś na Nexus" FontSize="13"
+                           Foreground="{StaticResource NexusMutedForegroundBrush}"
+                           HorizontalAlignment="Center" />
+            </StackPanel>
+
+            <!-- Pole wprowadzania wiadomości -->
+            <Border Grid.Row="2" x:Name="ChatInputBar" Padding="12"
+                    BorderBrush="{StaticResource NexusBorderBrush}" BorderThickness="0,1,0,0"
+                    Visibility="Collapsed">
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="MessageInput" Grid.Column="0"
+                             PlaceholderText="Napisz wiadomość..."
+                             Style="{StaticResource NexusSearchBoxStyle}" />
+                    <Button Grid.Column="1" Style="{StaticResource NexusPrimaryButtonStyle}"
+                            Padding="10,8" Click="SendButton_Click">
+                        <FontIcon Glyph="&#xE724;" FontSize="14" Foreground="White" />
+                    </Button>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</Page>

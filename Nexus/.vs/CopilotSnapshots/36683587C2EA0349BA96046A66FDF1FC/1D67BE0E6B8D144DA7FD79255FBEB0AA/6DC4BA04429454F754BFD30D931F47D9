@@ -1,0 +1,32 @@
+﻿using Microsoft.UI.Xaml.Controls;
+using Nexus.ViewModels;
+
+namespace Nexus.Views;
+
+public sealed partial class ProfilePage : Page
+{
+    public ProfileViewModel ViewModel { get; } = new();
+
+    public ProfilePage()
+    {
+        InitializeComponent();
+
+        // Wypełnienie danych profilu z ViewModel
+        var u = ViewModel.User;
+        ProfileName.Text = u.DisplayName;
+        ProfileLogin.Text = u.AtLogin;
+        ProfileBio.Text = u.Bio;
+        ProfileLoginDetail.Text = u.Login;
+        ProfileEmail.Text = u.Email;
+        ProfileLocation.Text = u.Lokalizacja;
+        ProfileWebsite.Text = u.Website;
+        ProfileBirth.Text = $"Ur. {ViewModel.BirthDate}";
+        ProfileJoined.Text = $"Dołączył: {ViewModel.JoinedDate}";
+
+        StatPosts.Text = u.PostsCount.ToString("N0", new System.Globalization.CultureInfo("pl-PL"));
+        StatFollowing.Text = u.FollowCount.ToString("N0", new System.Globalization.CultureInfo("pl-PL"));
+        StatFollowers.Text = u.FollowersCount.ToString("N0", new System.Globalization.CultureInfo("pl-PL"));
+
+        UserPostsListView.ItemsSource = ViewModel.Posts;
+    }
+}

@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Application
+    x:Class="Nexus.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Nexus"
+    xmlns:helpers="using:Nexus.Helpers"
+    RequestedTheme="Dark">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+                <!-- Paleta kolorów i style Nexus -->
+                <ResourceDictionary Source="ms-appx:///Themes/DarkTheme.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Konwertery wartości używane w bindowaniach XAML -->
+            <helpers:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
+            <helpers:BoolToAlignmentConverter x:Key="BoolToAlignmentConverter" />
+            <helpers:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+            <helpers:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" />
+            <helpers:BoolToBrushConverter x:Key="BoolToBrushConverter" />
+            <helpers:FollowButtonTextConverter x:Key="FollowButtonTextConverter" />
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
+
