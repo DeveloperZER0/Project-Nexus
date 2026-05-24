@@ -1,1 +1,0 @@
-D:\Studia\Programowanie obiektowe\Project-Nexus\Nexus\Nexus.csproj;x64
