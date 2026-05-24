@@ -1,0 +1,116 @@
+# Build results
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+*.so
+*.dylib
+*.su
+*.o
+
+# NuGet
+.nuget/
+*.nupkg
+*.snupkg
+packages/
+.nupkg.metadata
+project.lock.json
+project.assets.json
+launchSettings.json
+
+# Visual Studio / Visual Studio Code
+.vs/
+.vscode/
+*.user
+*.suo
+*.sln.docstates
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+out/
+dist/
+build/
+publish/
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# User settings and local configuration
+appsettings.local.json
+*.local.config
+local.settings.json
+
+# IDE temporaries
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+
+# OS files
+.DS_Store
+ehthumbs.db
+Desktop.ini
+
+# Logs
+*.log
+logs/
+error_*.txt
+launch.txt
+
+# Test Results
+TestResults/
+.coverage
+coverage/
+*.trx
+
+# Temporary files
+*.tmp
+*.temp
+*.backup
+~*
+
+# Entity Framework
+Migrations/Snapshot*.cs
+
+# WinUI / Windows App SDK
+AppPackages/
+BundleArtifacts/
+GeneratedFiles/
+.msix
+*.msixupload
+
+# Profiling and debugging
+*.etl
+*.vsp
+*.psess
+*.vspx
+*.sap
+
+# Visual Studio cache
+.vs/*
+!.vs/config.json
+
+# Rider
+.idea/
+.ideaDataSources/
+
+# Mac specific
+.AppleDouble
+.LSOverride
+
+# Windows specific
+$RECYCLE.BIN/
+
+# Azure
+azure-pipelines/
+
+# Dependencies
+node_modules/
