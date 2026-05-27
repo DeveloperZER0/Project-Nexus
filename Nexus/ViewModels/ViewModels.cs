@@ -501,8 +501,8 @@ public partial class ProfileViewModel : ObservableObject
         List<Post> posts = SelectedTab switch
         {
             "likes" => _dataService.GetLikedPosts(User.Id),
-            // "replies" => _dataService.GetUserRepliesAsync(User.Id), // TODO: Dodać później
-            // "media" => _dataService.GetUserMediaPostsAsync(User.Id), // TODO: Dodać później
+            "replies" => _dataService.GetUserReplies(User.Id),
+            "media" => _dataService.GetUserMediaPosts(User.Id),
             _ => _dataService.GetUserPosts(User.Id),
         };
 
@@ -532,10 +532,29 @@ public partial class ProfileViewModel : ObservableObject
 
     public bool IsCurrentUser => User?.Id == _currentUserId;
 
+    /// <summary>Emitowany gdy użytkownik chce edytować profil. Page nasłuchuje i pokazuje dialog.</summary>
+    public event Action? EditProfileRequested;
+
+    partial void OnUserChanged(UserProfile? value)
+    {
+        // IsCurrentUser jest obliczane z User – po zmianie User trzeba odświeżyć binding.
+        OnPropertyChanged(nameof(IsCurrentUser));
+    }
+
     [RelayCommand]
     private void EditProfile()
     {
-        // Implementacja edycji profilu
+        EditProfileRequested?.Invoke();
+    }
+
+    /// <summary>
+    /// Zapisuje zmodyfikowany profil użytkownika. Wywoływane z dialogu w ProfilePage.
+    /// </summary>
+    public void SaveProfile(string displayName, string bio, string lokalizacja, string website, string dataUrodzenia)
+    {
+        if (User == null) return;
+        _dataService.UpdateUserProfile(User.Id, displayName, bio, lokalizacja, website, dataUrodzenia);
+        LoadCurrentUserProfile();
     }
 
     [RelayCommand]
@@ -684,11 +703,13 @@ public partial class SettingsViewModel : ObservableObject
     /// <summary>Emitowany po wylogowaniu lub usunięciu konta. App nawiguje do ekranu logowania.</summary>
     public event Action? LoggedOut;
 
+    /// <summary>Emitowany, gdy użytkownik chce zmienić hasło. View pokazuje dialog.</summary>
+    public event Action? ChangePasswordRequested;
+
     [RelayCommand]
     private void ChangePassword()
     {
-        // Dialog do zmiany hasła jest obsługiwany przez code-behind SettingsPage.
-        // ViewModel udostępnia rzeczywistą zmianę przez TryChangePassword poniżej.
+        ChangePasswordRequested?.Invoke();
     }
 
     /// <summary>Zmienia hasło, gdy stare jest poprawne. Wywoływane z dialogu.</summary>

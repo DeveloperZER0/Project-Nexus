@@ -119,9 +119,11 @@
             <StackPanel Padding="16,56,16,12" Spacing="6"
                         BorderBrush="{StaticResource NexusBorderBrush}" BorderThickness="0,0,0,1">
 
-                <!-- Przycisk edytuj profil -->
+                <!-- Przycisk edytuj profil — widoczny tylko dla aktualnego użytkownika -->
                 <Button Style="{StaticResource NexusSecondaryButtonStyle}"
-                        HorizontalAlignment="Right" Margin="0,-40,0,0">
+                        HorizontalAlignment="Right" Margin="0,-40,0,0"
+                        Command="{x:Bind ViewModel.EditProfileCommand}"
+                        Visibility="{x:Bind ViewModel.IsCurrentUser, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <FontIcon Glyph="&#xE70F;" FontSize="12" />
                         <TextBlock Text="Edytuj profil" FontSize="12" FontWeight="Medium" />
@@ -219,16 +221,20 @@
             <Border BorderBrush="{StaticResource NexusBorderBrush}" BorderThickness="0,0,0,1">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="8,0">
-                        <Button Content="Posty" Background="Transparent" BorderThickness="0"
+                        <Button x:Name="TabPosts" Content="Posty" Tag="posts" Click="OnTabClicked"
+                                Background="Transparent" BorderThickness="0"
                                 Foreground="{StaticResource NexusForegroundBrush}"
                                 FontWeight="SemiBold" FontSize="13" Padding="16,10" />
-                        <Button Content="Odpowiedzi" Background="Transparent" BorderThickness="0"
+                        <Button x:Name="TabReplies" Content="Odpowiedzi" Tag="replies" Click="OnTabClicked"
+                                Background="Transparent" BorderThickness="0"
                                 Foreground="{StaticResource NexusMutedForegroundBrush}"
                                 FontSize="13" Padding="16,10" />
-                        <Button Content="Media" Background="Transparent" BorderThickness="0"
+                        <Button x:Name="TabMedia" Content="Media" Tag="media" Click="OnTabClicked"
+                                Background="Transparent" BorderThickness="0"
                                 Foreground="{StaticResource NexusMutedForegroundBrush}"
                                 FontSize="13" Padding="16,10" />
-                        <Button Content="Polubienia" Background="Transparent" BorderThickness="0"
+                        <Button x:Name="TabLikes" Content="Polubienia" Tag="likes" Click="OnTabClicked"
+                                Background="Transparent" BorderThickness="0"
                                 Foreground="{StaticResource NexusMutedForegroundBrush}"
                                 FontSize="13" Padding="16,10" />
                     </StackPanel>

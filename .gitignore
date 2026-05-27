@@ -55,7 +55,6 @@ local.settings.json
 .classpath
 
 # OS files
-.DS_Store
 ehthumbs.db
 Desktop.ini
 
@@ -70,6 +69,8 @@ TestResults/
 .coverage
 coverage/
 *.trx
+*.coverage
+*.coveragexml
 
 # Temporary files
 *.tmp
@@ -78,7 +79,6 @@ coverage/
 ~*
 
 # Entity Framework
-Migrations/Snapshot*.cs
 
 # WinUI / Windows App SDK
 AppPackages/
@@ -86,6 +86,14 @@ BundleArtifacts/
 GeneratedFiles/
 .msix
 *.msixupload
+*.g.cs
+*.g.i.cs
+*.msixbundle
+*.appx
+*.appxbundle
+*.cer
+*.pfx
+*.xbf
 
 # Profiling and debugging
 *.etl
@@ -95,11 +103,19 @@ GeneratedFiles/
 *.sap
 
 # Visual Studio cache
-.vs/*
-!.vs/config.json
+*.rsuser
+*.userosscache
+.vshistory/
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+*.opensdf
+*.sdf
+*.cachefile
+*.VC.db
+*.VC.VC.opendb
 
 # Rider
-.idea/
 .ideaDataSources/
 
 # Mac specific

@@ -158,6 +158,48 @@ public class NexusDataService
         return posts.Select(p => MapPostWithUserStatus(p, currentUserId)).ToList();
     }
 
+    // Zwraca posty, na które użytkownik odpowiedział (skomentował)
+    public List<Post> GetUserReplies(int userId)
+    {
+        using var db = CreateContext();
+        var currentUserId = GetCurrentUserId();
+        var postIds = db.Comments
+            .Where(c => c.UserId == userId)
+            .Select(c => c.PostId)
+            .Distinct()
+            .ToList();
+
+        var posts = db.Posts
+            .Include(p => p.Author)
+                .ThenInclude(a => a!.Profile)
+            .Include(p => p.Hashtags)
+            .Include(p => p.Likes)
+            .Include(p => p.Bookmarks)
+            .Where(p => postIds.Contains(p.Id))
+            .OrderByDescending(p => p.CreatedAt)
+            .ToList();
+
+        return posts.Select(p => MapPostWithUserStatus(p, currentUserId)).ToList();
+    }
+
+    // Zwraca posty użytkownika, które zawierają media (MediaUrl)
+    public List<Post> GetUserMediaPosts(int userId)
+    {
+        using var db = CreateContext();
+        var currentUserId = GetCurrentUserId();
+        var posts = db.Posts
+            .Include(p => p.Author)
+                .ThenInclude(a => a!.Profile)
+            .Include(p => p.Hashtags)
+            .Include(p => p.Likes)
+            .Include(p => p.Bookmarks)
+            .Where(p => p.AuthorId == userId && p.MediaUrl != null && p.MediaUrl != "")
+            .OrderByDescending(p => p.CreatedAt)
+            .ToList();
+
+        return posts.Select(p => MapPostWithUserStatus(p, currentUserId)).ToList();
+    }
+
     public List<TrendingHashtag> GetTrendingHashtags(int take = 10)
     {
         using var db = CreateContext();
@@ -272,6 +314,42 @@ public class NexusDataService
     {
         using var db = CreateContext();
         db.UserSettings.Update(settings);
+        db.SaveChanges();
+    }
+
+    /// <summary>
+    /// Aktualizuje pola tekstowe profilu użytkownika. DisplayName jest rozbijany na Imię i Nazwisko
+    /// (pierwsze słowo = Imię, reszta = Nazwisko). Jeśli profil nie istnieje, zostaje utworzony.
+    /// </summary>
+    public void UpdateUserProfile(int userId, string displayName, string bio, string lokalizacja, string website, string dataUrodzenia)
+    {
+        using var db = CreateContext();
+        var profile = db.UserProfiles.FirstOrDefault(p => p.UserId == userId);
+        if (profile == null)
+        {
+            profile = new UserProfileEntity { UserId = userId };
+            db.UserProfiles.Add(profile);
+        }
+
+        // Rozbij DisplayName na Imię + Nazwisko po pierwszym białym znaku.
+        var trimmed = (displayName ?? string.Empty).Trim();
+        var spaceIndex = trimmed.IndexOf(' ');
+        if (spaceIndex > 0)
+        {
+            profile.FirstName = trimmed.Substring(0, spaceIndex);
+            profile.LastName = trimmed.Substring(spaceIndex + 1).TrimStart();
+        }
+        else
+        {
+            profile.FirstName = trimmed;
+            profile.LastName = string.Empty;
+        }
+
+        profile.Bio = bio ?? string.Empty;
+        profile.Location = lokalizacja ?? string.Empty;
+        profile.Website = website ?? string.Empty;
+        profile.BirthDate = dataUrodzenia ?? string.Empty;
+
         db.SaveChanges();
     }
 
