@@ -20,6 +20,7 @@ project.assets.json
 launchSettings.json
 
 # Visual Studio / Visual Studio Code
+.claude/
 .vs/
 .vscode/
 *.user

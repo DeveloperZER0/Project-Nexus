@@ -16,6 +16,28 @@
     <Page.Resources>
         <!-- Konwertery muszą być w zasięgu Page aby działały w DataTemplate (kompilator x:Bind) -->
         <helpers:BoolToBrushConverter x:Key="BoolToBrushConverter" />
+        <helpers:StringToImageSourceConverter x:Key="StringToImageSourceConverter" />
+        <helpers:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
+
+        <!-- Szablon pojedynczego komentarza (dialog komentarzy) -->
+        <DataTemplate x:Key="CommentTemplate" x:DataType="models:Comment">
+            <Border Padding="10,8" BorderBrush="{StaticResource NexusBorderBrush}"
+                    BorderThickness="0,0,0,1">
+                <StackPanel Spacing="3">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="{x:Bind Author.DisplayName}" FontWeight="SemiBold" FontSize="13"
+                                   Foreground="{StaticResource NexusForegroundBrush}" />
+                        <TextBlock FontSize="11" Foreground="{StaticResource NexusMutedForegroundBrush}">
+                            <Run Text="{x:Bind Author.AtLogin}" />
+                            <Run Text=" · " />
+                            <Run Text="{x:Bind CreatedAt}" />
+                        </TextBlock>
+                    </StackPanel>
+                    <TextBlock Text="{x:Bind Content}" FontSize="13" TextWrapping="Wrap"
+                               Foreground="{StaticResource NexusForegroundBrush}" />
+                </StackPanel>
+            </Border>
+        </DataTemplate>
 
         <!-- DataTemplate dla pojedynczego posta (PostCard) -->
         <DataTemplate x:Key="PostCardTemplate" x:DataType="models:Post">
@@ -49,9 +71,12 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <StackPanel Orientation="Horizontal" Spacing="6">
-                                <TextBlock Text="{x:Bind Author.DisplayName}"
-                                           Style="{StaticResource NexusDisplayNameStyle}" />
-                                <TextBlock FontSize="12"
+                                <Button Background="Transparent" BorderThickness="0" Padding="0"
+                                        Click="AuthorButton_Click" Tag="{x:Bind Author}">
+                                    <TextBlock Text="{x:Bind Author.DisplayName}"
+                                               Style="{StaticResource NexusDisplayNameStyle}" />
+                                </Button>
+                                <TextBlock FontSize="12" VerticalAlignment="Center"
                                            Foreground="{StaticResource NexusMutedForegroundBrush}">
                                     <Run Text="{x:Bind Author.AtLogin}" />
                                     <Run Text=" · " />
@@ -59,7 +84,8 @@
                                 </TextBlock>
                             </StackPanel>
                             <Button Grid.Column="1" Background="Transparent" BorderThickness="0"
-                                    Padding="4" CornerRadius="4">
+                                    Padding="4" CornerRadius="4"
+                                    Click="MoreButton_Click" Tag="{x:Bind}">
                                 <FontIcon Glyph="&#xE712;" FontSize="14"
                                           Foreground="{StaticResource NexusMutedForegroundBrush}" />
                             </Button>
@@ -69,6 +95,14 @@
                         <TextBlock Text="{x:Bind Tekst}"
                                    Style="{StaticResource NexusBodyStyle}"
                                    FontSize="14" LineHeight="21" />
+
+                        <!-- Media (obraz posta, jeśli istnieje) -->
+                        <Border CornerRadius="12" Margin="0,8,0,0" HorizontalAlignment="Left"
+                                BorderBrush="{StaticResource NexusBorderBrush}" BorderThickness="1"
+                                Visibility="{x:Bind MediaUrl, Converter={StaticResource NullToVisibilityConverter}}">
+                            <Image Source="{x:Bind MediaUrl, Converter={StaticResource StringToImageSourceConverter}}"
+                                   Stretch="UniformToFill" MaxHeight="320" />
+                        </Border>
 
                         <!-- Hashtagi -->
                         <ItemsRepeater ItemsSource="{x:Bind Hashtags}" Margin="0,4,0,0">
@@ -129,7 +163,8 @@
                                           Foreground="{x:Bind Bookmarked, Converter={StaticResource BoolToBrushConverter}, ConverterParameter=Bookmark}" />
                             </Button>
                             <!-- Udostępnij -->
-                            <Button Background="Transparent" BorderThickness="0" Padding="6,4" CornerRadius="4">
+                            <Button Background="Transparent" BorderThickness="0" Padding="6,4" CornerRadius="4"
+                                    Click="ShareButton_Click" Tag="{x:Bind}">
                                 <FontIcon Glyph="&#xE72D;" FontSize="14"
                                           Foreground="{StaticResource NexusMutedForegroundBrush}" />
                             </Button>

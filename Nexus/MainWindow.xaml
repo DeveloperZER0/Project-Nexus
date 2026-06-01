@@ -75,6 +75,12 @@
                                 Click="FollowButton_Click" Tag="{Binding}">
                             <TextBlock Text="{Binding IsFollowing, Converter={StaticResource FollowButtonTextConverter}}" FontSize="11" FontWeight="SemiBold" />
                         </Button>
+
+                        <!-- Przezroczysty przycisk nad awatarem i nazwą — otwiera profil -->
+                        <Button Grid.Column="0" Grid.ColumnSpan="2" Background="Transparent"
+                                BorderThickness="0" Padding="0" HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Stretch"
+                                Click="SuggestedUserProfile_Click" Tag="{Binding}" />
                     </Grid>
                 </DataTemplate>
             </Grid.Resources>
@@ -114,12 +120,13 @@
             </StackPanel>
 
             <!-- Wyszukiwarka globalna -->
-            <TextBox Grid.Column="1"
-                     PlaceholderText="Szukaj na Nexus (Ctrl+K)"
+            <TextBox Grid.Column="1" x:Name="GlobalSearchBox"
+                     PlaceholderText="Szukaj na Nexus (Enter)"
                      Style="{StaticResource NexusSearchBoxStyle}"
                      MaxWidth="400" Margin="24,0"
                      VerticalAlignment="Center"
-                     Height="28" />
+                     Height="28"
+                     KeyDown="GlobalSearchBox_KeyDown" />
         </Grid>
 
         <!-- ═══════════ GŁÓWNA ZAWARTOŚĆ ═══════════ -->

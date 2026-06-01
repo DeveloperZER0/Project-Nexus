@@ -8,9 +8,13 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:models="using:Nexus.Models"
+    xmlns:helpers="using:Nexus.Helpers"
     Background="Transparent">
 
     <Page.Resources>
+        <helpers:StringToImageSourceConverter x:Key="StringToImageSourceConverter" />
+        <helpers:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
+
         <!-- Reużywalny template posta (taki sam jak na HomePage) -->
         <DataTemplate x:Key="PostCardTemplate" x:DataType="models:Post">
             <Border Padding="14" BorderBrush="{StaticResource NexusBorderBrush}"
@@ -44,6 +48,12 @@
                         </StackPanel>
                         <TextBlock Text="{x:Bind Tekst}" Style="{StaticResource NexusBodyStyle}"
                                    FontSize="14" LineHeight="21" />
+                        <Border CornerRadius="12" Margin="0,8,0,0" HorizontalAlignment="Left"
+                                BorderBrush="{StaticResource NexusBorderBrush}" BorderThickness="1"
+                                Visibility="{x:Bind MediaUrl, Converter={StaticResource NullToVisibilityConverter}}">
+                            <Image Source="{x:Bind MediaUrl, Converter={StaticResource StringToImageSourceConverter}}"
+                                   Stretch="UniformToFill" MaxHeight="320" />
+                        </Border>
                         <ItemsRepeater ItemsSource="{x:Bind Hashtags}" Margin="0,4,0,0">
                             <ItemsRepeater.Layout>
                                 <StackLayout Orientation="Horizontal" Spacing="6" />
@@ -128,6 +138,15 @@
                         <FontIcon Glyph="&#xE70F;" FontSize="12" />
                         <TextBlock Text="Edytuj profil" FontSize="12" FontWeight="Medium" />
                     </StackPanel>
+                </Button>
+
+                <!-- Przycisk obserwuj — widoczny tylko na cudzym profilu -->
+                <Button Style="{StaticResource NexusPrimaryButtonStyle}"
+                        HorizontalAlignment="Right" Margin="0,-40,0,0"
+                        Command="{x:Bind ViewModel.FollowCommand}"
+                        Visibility="{x:Bind ViewModel.ShowFollowButton, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                    <TextBlock Text="{x:Bind ViewModel.IsFollowing, Converter={StaticResource FollowButtonTextConverter}, Mode=OneWay}"
+                               FontSize="12" FontWeight="Medium" />
                 </Button>
 
                 <TextBlock x:Name="ProfileName" FontSize="20" FontWeight="SemiBold"

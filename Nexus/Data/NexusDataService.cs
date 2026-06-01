@@ -247,6 +247,14 @@ public class NexusDataService
         }).ToList();
     }
 
+    /// <summary>Czy <paramref name="followerId"/> obserwuje <paramref name="followingId"/>.</summary>
+    public bool IsFollowing(int followerId, int followingId)
+    {
+        if (followerId <= 0 || followingId <= 0) return false;
+        using var db = CreateContext();
+        return db.Follows.Any(f => f.FollowerId == followerId && f.FollowingId == followingId);
+    }
+
     public bool ToggleFollow(int followerId, int followingId)
     {
         using var db = CreateContext();

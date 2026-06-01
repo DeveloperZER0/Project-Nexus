@@ -17,6 +17,33 @@
         <helpers:BoolToAlignmentConverter x:Key="BoolToAlignmentConverter" />
         <helpers:BoolToBrushConverter x:Key="BoolToBrushConverter" />
         <helpers:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" />
+
+        <!-- Wiersz użytkownika w dialogu "Nowa wiadomość" -->
+        <DataTemplate x:Key="MessageUserTemplate" x:DataType="models:SuggestedUser">
+            <Grid ColumnSpacing="10" Padding="4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0" Width="36" Height="36" CornerRadius="18"
+                        BorderBrush="{StaticResource NexusBorderBrush}" BorderThickness="1">
+                    <Border.Background>
+                        <ImageBrush Stretch="UniformToFill">
+                            <ImageBrush.ImageSource>
+                                <BitmapImage UriSource="{x:Bind AvatarUrl}"
+                                             DecodePixelWidth="72" CreateOptions="IgnoreImageCache" />
+                            </ImageBrush.ImageSource>
+                        </ImageBrush>
+                    </Border.Background>
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="{x:Bind DisplayName}" FontWeight="SemiBold" FontSize="13"
+                               Foreground="{StaticResource NexusForegroundBrush}" />
+                    <TextBlock Text="{x:Bind AtLogin}" FontSize="12"
+                               Foreground="{StaticResource NexusMutedForegroundBrush}" />
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
     </Page.Resources>
 
     <Grid>
@@ -41,19 +68,21 @@
                 <Grid>
                     <TextBlock Text="Wiadomości" Style="{StaticResource NexusPageHeaderStyle}" />
                     <Button HorizontalAlignment="Right" Background="Transparent" BorderThickness="0"
-                            Padding="6" CornerRadius="4">
-                        <FontIcon Glyph="&#xE713;" FontSize="14"
+                            Padding="6" CornerRadius="4" Click="NewConversation_Click"
+                            ToolTipService.ToolTip="Nowa wiadomość">
+                        <FontIcon Glyph="&#xE710;" FontSize="14"
                                   Foreground="{StaticResource NexusMutedForegroundBrush}" />
                     </Button>
                 </Grid>
                 <Grid>
                     <TextBox PlaceholderText="Szukaj konwersacji..."
+                             Text="{x:Bind ViewModel.SearchQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                              Style="{StaticResource NexusSearchBoxStyle}"
                              Padding="28,6,8,6" />
                     <FontIcon Glyph="&#xE721;" FontSize="12"
                               Foreground="{StaticResource NexusMutedForegroundBrush}"
                               HorizontalAlignment="Left" VerticalAlignment="Center"
-                              Margin="8,0,0,0" />
+                              Margin="8,0,0,0" IsHitTestVisible="False" />
                 </Grid>
             </StackPanel>
 

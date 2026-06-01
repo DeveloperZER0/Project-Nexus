@@ -1,3 +1,6 @@
+using System;
+using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Nexus.Models;
@@ -70,13 +73,89 @@ public sealed partial class HomePage : Page
         ComposeTextBox.Text = string.Empty;
     }
 
-    private void CommentButton_Click(object sender, RoutedEventArgs e)
+    private async void CommentButton_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is Button button && button.Tag is Post post)
+        if (sender is not Button button || button.Tag is not Post post) return;
+
+        ViewModel.SetSelectedPost(post);
+        await ShowCommentsDialogAsync();
+    }
+
+    /// <summary>
+    /// Dialog komentarzy — wyświetla istniejące komentarze posta i pozwala dodać nowy.
+    /// Lista odświeża się na żywo po dodaniu, a licznik komentarzy na karcie posta rośnie.
+    /// </summary>
+    private async System.Threading.Tasks.Task ShowCommentsDialogAsync()
+    {
+        var comments = new ObservableCollection<Comment>(ViewModel.GetCommentsForSelected());
+
+        var list = new ListView
         {
-            ViewModel.SetSelectedPost(post);
-            ViewModel.CommentCommand.Execute(null);
-        }
+            ItemsSource = comments,
+            ItemTemplate = (DataTemplate)Resources["CommentTemplate"],
+            SelectionMode = ListViewSelectionMode.None,
+            IsItemClickEnabled = false,
+            MaxHeight = 320,
+        };
+
+        var emptyText = new TextBlock
+        {
+            Text = "Brak komentarzy. Bądź pierwszy!",
+            FontSize = 13,
+            Foreground = (Microsoft.UI.Xaml.Media.Brush)App.Current.Resources["NexusMutedForegroundBrush"],
+            Visibility = comments.Count == 0 ? Visibility.Visible : Visibility.Collapsed,
+        };
+
+        var input = new TextBox
+        {
+            PlaceholderText = "Napisz komentarz...",
+            AcceptsReturn = true,
+            TextWrapping = TextWrapping.Wrap,
+            MaxHeight = 80,
+        };
+
+        var addButton = new Button
+        {
+            Content = "Dodaj",
+            Style = (Style)App.Current.Resources["NexusPrimaryButtonStyle"],
+        };
+
+        addButton.Click += (_, _) =>
+        {
+            var text = input.Text?.Trim();
+            if (string.IsNullOrWhiteSpace(text)) return;
+
+            var added = ViewModel.AddComment(text);
+            if (added != null)
+            {
+                comments.Insert(0, added);
+                emptyText.Visibility = Visibility.Collapsed;
+                input.Text = string.Empty;
+            }
+        };
+
+        var inputRow = new Grid { ColumnSpacing = 8, Margin = new Thickness(0, 8, 0, 0) };
+        inputRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        inputRow.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        Grid.SetColumn(input, 0);
+        Grid.SetColumn(addButton, 1);
+        inputRow.Children.Add(input);
+        inputRow.Children.Add(addButton);
+
+        var panel = new StackPanel { Spacing = 6, MinWidth = 360 };
+        panel.Children.Add(emptyText);
+        panel.Children.Add(list);
+        panel.Children.Add(inputRow);
+
+        var dialog = new ContentDialog
+        {
+            Title = "Komentarze",
+            CloseButtonText = "Zamknij",
+            Content = panel,
+            XamlRoot = this.Content.XamlRoot,
+        };
+
+        await dialog.ShowAsync();
     }
 
     private void RepostButton_Click(object sender, RoutedEventArgs e)
@@ -85,6 +164,16 @@ public sealed partial class HomePage : Page
         {
             ViewModel.SetSelectedPost(post);
             ViewModel.RepostCommand.Execute(null);
+        }
+    }
+
+    /// <summary>Klik w nazwę autora posta otwiera jego profil.</summary>
+    private void AuthorButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button button && button.Tag is PostAuthor author &&
+            !string.IsNullOrWhiteSpace(author.Login))
+        {
+            Frame?.Navigate(typeof(ProfilePage), author.Login);
         }
     }
 
@@ -104,5 +193,49 @@ public sealed partial class HomePage : Page
             ViewModel.SetSelectedPost(post);
             ViewModel.ToggleBookmarkCommand.Execute(null);
         }
+    }
+
+    /// <summary>Menu posta — usuwanie dostępne tylko dla własnych postów.</summary>
+    private void MoreButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button button || button.Tag is not Post post) return;
+
+        var flyout = new MenuFlyout();
+        if (post.Author.Login == ViewModel.CurrentUserLogin)
+        {
+            var delete = new MenuFlyoutItem
+            {
+                Text = "Usuń post",
+                Icon = new FontIcon { Glyph = "" },
+            };
+            delete.Click += (_, _) =>
+            {
+                ViewModel.SetSelectedPost(post);
+                ViewModel.DeletePostCommand.Execute(null);
+            };
+            flyout.Items.Add(delete);
+        }
+        else
+        {
+            flyout.Items.Add(new MenuFlyoutItem { Text = "Zgłoś post", IsEnabled = false });
+        }
+
+        flyout.ShowAt(button);
+    }
+
+    /// <summary>Udostępnij — kopiuje treść posta do schowka.</summary>
+    private void ShareButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button button || button.Tag is not Post post) return;
+
+        var data = new Windows.ApplicationModel.DataTransfer.DataPackage();
+        data.SetText(post.Tekst);
+        Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(data);
+
+        var flyout = new Flyout
+        {
+            Content = new TextBlock { Text = "Skopiowano treść posta do schowka" },
+        };
+        flyout.ShowAt(button);
     }
 }

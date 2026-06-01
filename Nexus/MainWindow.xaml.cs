@@ -80,5 +80,31 @@ namespace Nexus
                 ViewModel.ToggleFollow(user);
             }
         }
+
+        /// <summary>Klik w sugerowanego użytkownika otwiera jego profil w głównej ramce.</summary>
+        private void SuggestedUserProfile_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.Tag is SuggestedUser user &&
+                !string.IsNullOrWhiteSpace(user.Login))
+            {
+                ContentFrame.Navigate(typeof(Views.ProfilePage), user.Login);
+            }
+        }
+
+        /// <summary>
+        /// Globalna wyszukiwarka — Enter przenosi na stronę Odkrywaj z wpisanym zapytaniem.
+        /// </summary>
+        private void GlobalSearchBox_KeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
+        {
+            if (e.Key != Windows.System.VirtualKey.Enter) return;
+
+            var query = GlobalSearchBox.Text?.Trim();
+            if (string.IsNullOrWhiteSpace(query)) return;
+
+            // Zaznacz "Odkrywaj" w nawigacji, a następnie nadpisz nawigację przekazując zapytanie.
+            NavListView.SelectedIndex = 1;
+            ContentFrame.Navigate(typeof(Views.ExplorePage), query);
+            e.Handled = true;
+        }
     }
 }

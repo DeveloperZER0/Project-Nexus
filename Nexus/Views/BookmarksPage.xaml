@@ -8,9 +8,12 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:models="using:Nexus.Models"
+    xmlns:helpers="using:Nexus.Helpers"
     Background="Transparent">
 
     <Page.Resources>
+        <helpers:StringToImageSourceConverter x:Key="StringToImageSourceConverter" />
+        <helpers:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
         <DataTemplate x:Key="PostCardTemplate" x:DataType="models:Post">
             <Border Padding="14" BorderBrush="{StaticResource NexusBorderBrush}"
                     BorderThickness="0,0,0,1" Background="Transparent">
@@ -43,6 +46,12 @@
                         </StackPanel>
                         <TextBlock Text="{x:Bind Tekst}" Style="{StaticResource NexusBodyStyle}"
                                    FontSize="14" LineHeight="21" />
+                        <Border CornerRadius="12" Margin="0,8,0,0" HorizontalAlignment="Left"
+                                BorderBrush="{StaticResource NexusBorderBrush}" BorderThickness="1"
+                                Visibility="{x:Bind MediaUrl, Converter={StaticResource NullToVisibilityConverter}}">
+                            <Image Source="{x:Bind MediaUrl, Converter={StaticResource StringToImageSourceConverter}}"
+                                   Stretch="UniformToFill" MaxHeight="320" />
+                        </Border>
                         <ItemsRepeater ItemsSource="{x:Bind Hashtags}" Margin="0,4,0,0">
                             <ItemsRepeater.Layout>
                                 <StackLayout Orientation="Horizontal" Spacing="6" />

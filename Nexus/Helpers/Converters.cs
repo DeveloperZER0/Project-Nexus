@@ -1,7 +1,9 @@
 using System;
+using System.IO;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
 
 namespace Nexus.Helpers;
 
@@ -109,6 +111,41 @@ public class InverseBoolToVisibilityConverter : IValueConverter
         if (value is bool b && b)
             return Visibility.Collapsed;
         return Visibility.Visible;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language)
+        => throw new NotImplementedException();
+}
+
+/// <summary>
+/// Konwerter string (URL lub ścieżka względna) → ImageSource.
+/// Obsługuje adresy http(s) oraz lokalne pliki z katalogu uploads (AddPostWithImage).
+/// Zwraca null gdy brak adresu — Image po prostu nic nie wyświetli.
+/// </summary>
+public class StringToImageSourceConverter : IValueConverter
+{
+    public object? Convert(object value, Type targetType, object parameter, string language)
+    {
+        if (value is not string s || string.IsNullOrWhiteSpace(s))
+            return null;
+
+        try
+        {
+            if (s.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                s.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+                s.StartsWith("ms-appx", StringComparison.OrdinalIgnoreCase))
+            {
+                return new BitmapImage(new Uri(s)) { CreateOptions = BitmapCreateOptions.IgnoreImageCache };
+            }
+
+            // Ścieżka względna (np. "uploads/xyz.jpg") — zbuduj pełną ścieżkę pliku.
+            var fullPath = Path.Combine(AppContext.BaseDirectory, s.Replace('/', Path.DirectorySeparatorChar));
+            return new BitmapImage(new Uri(fullPath));
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)

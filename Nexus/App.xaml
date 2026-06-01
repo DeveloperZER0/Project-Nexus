@@ -27,6 +27,7 @@
             <helpers:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" />
             <helpers:BoolToBrushConverter x:Key="BoolToBrushConverter" />
             <helpers:FollowButtonTextConverter x:Key="FollowButtonTextConverter" />
+            <helpers:StringToImageSourceConverter x:Key="StringToImageSourceConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

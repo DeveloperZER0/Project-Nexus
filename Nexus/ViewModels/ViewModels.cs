@@ -20,6 +20,9 @@ public partial class HomeViewModel : ObservableObject
     private readonly int _currentUserId;
     private Dictionary<int, Post> _postLookup = new();
 
+    /// <summary>Login zalogowanego użytkownika — do sprawdzania, czy post jest jego (usuwanie).</summary>
+    public string CurrentUserLogin { get; }
+
     [ObservableProperty]
     public partial string SelectedTab { get; set; }
 
@@ -40,6 +43,7 @@ public partial class HomeViewModel : ObservableObject
     {
         _dataService = dataService;
         _currentUserId = _dataService.GetCurrentUserId();
+        CurrentUserLogin = _dataService.GetCurrentUserProfile().Login;
         Posts = new ObservableCollection<Post>();
         ComposeText = string.Empty;
         // Ustawienie SelectedTab triggeruje OnSelectedTabChanged → RefreshFeed,
@@ -133,6 +137,14 @@ public partial class HomeViewModel : ObservableObject
         AddOrUpdatePost(SelectedPost);
     }
 
+    /// <summary>Zwraca komentarze dla aktualnie wybranego posta.</summary>
+    public List<Comment> GetCommentsForSelected()
+    {
+        if (SelectedPost == null || !int.TryParse(SelectedPost.Id, out var postId))
+            return new List<Comment>();
+        return _dataService.GetComments(postId);
+    }
+
     /// <summary>Dodaje rzeczywisty komentarz (wywoływane np. z dialogu).</summary>
     public Comment? AddComment(string content)
     {
@@ -205,9 +217,19 @@ public partial class ExploreViewModel : ObservableObject
 
     public ObservableCollection<SuggestedUser> SearchedUsers { get; }
 
+    private readonly int _currentUserId;
+
+    /// <summary>Czy użytkownik wpisał jakieś zapytanie (steruje widocznością sekcji wyników).</summary>
+    public bool IsSearching => !string.IsNullOrWhiteSpace(SearchQuery);
+    public bool HasUserResults => SearchedUsers.Count > 0;
+    public bool HasPostResults => SearchedPosts.Count > 0;
+    public bool ShowTrending => !IsSearching;
+    public bool NoResults => IsSearching && !HasUserResults && !HasPostResults;
+
     public ExploreViewModel(NexusDataService dataService)
     {
         _dataService = dataService;
+        _currentUserId = _dataService.GetCurrentUserId();
         TrendingHashtags = new ObservableCollection<TrendingHashtag>(_dataService.GetTrendingHashtags());
         SearchedPosts = new ObservableCollection<Post>();
         SearchedUsers = new ObservableCollection<SuggestedUser>();
@@ -221,6 +243,7 @@ public partial class ExploreViewModel : ObservableObject
         {
             SearchedPosts.Clear();
             SearchedUsers.Clear();
+            NotifyResultState();
             return;
         }
 
@@ -240,12 +263,26 @@ public partial class ExploreViewModel : ObservableObject
 
         foreach (var user in users)
             SearchedUsers.Add(user);
+
+        NotifyResultState();
+    }
+
+    private void NotifyResultState()
+    {
+        OnPropertyChanged(nameof(IsSearching));
+        OnPropertyChanged(nameof(HasUserResults));
+        OnPropertyChanged(nameof(HasPostResults));
+        OnPropertyChanged(nameof(ShowTrending));
+        OnPropertyChanged(nameof(NoResults));
     }
 
     [RelayCommand]
-    private void SelectCategory(string category)
+    private void SelectCategory(string? category)
     {
+        if (string.IsNullOrWhiteSpace(category)) return;
         SelectedCategory = category;
+        // "Wszystko" czyści wyszukiwanie; pozostałe kategorie traktujemy jako zapytanie.
+        SearchQuery = category == "Wszystko" ? string.Empty : category;
     }
 
     [RelayCommand]
@@ -253,6 +290,14 @@ public partial class ExploreViewModel : ObservableObject
     {
         if (hashtag != null)
             SearchQuery = "#" + hashtag.Name;
+    }
+
+    /// <summary>Obserwuje/przestaje obserwować użytkownika z listy wyników.</summary>
+    public void ToggleFollow(SuggestedUser? user)
+    {
+        if (user == null) return;
+        user.IsFollowing = _dataService.ToggleFollow(_currentUserId, user.Id);
+        OnPropertyChanged(nameof(SearchedUsers));
     }
 }
 
@@ -386,6 +431,15 @@ public partial class MessagesViewModel : ObservableObject
         MessageText = string.Empty;
     }
 
+    /// <summary>Zwraca użytkowników, z którymi można rozpocząć rozmowę (z wykluczeniem siebie).</summary>
+    public List<SuggestedUser> FindUsersToMessage(string? query)
+    {
+        var users = string.IsNullOrWhiteSpace(query)
+            ? _dataService.GetSuggestedUsers(_currentUserId)
+            : _dataService.SearchUsers(query);
+        return users.Where(u => u.Id != _currentUserId).ToList();
+    }
+
     [RelayCommand]
     private void CreateNewConversation(SuggestedUser? user)
     {
@@ -456,7 +510,13 @@ public partial class ProfileViewModel : ObservableObject
     [ObservableProperty]
     public partial UserProfile? User { get; set; }
 
+    [ObservableProperty]
+    public partial bool IsFollowing { get; set; }
+
     public ObservableCollection<Post> Posts { get; }
+
+    /// <summary>Przycisk „Obserwuj" widoczny tylko na cudzym profilu.</summary>
+    public bool ShowFollowButton => User != null && !IsCurrentUser;
 
     public ProfileViewModel(NexusDataService dataService, string? userHandle = null)
     {
@@ -539,6 +599,10 @@ public partial class ProfileViewModel : ObservableObject
     {
         // IsCurrentUser jest obliczane z User – po zmianie User trzeba odświeżyć binding.
         OnPropertyChanged(nameof(IsCurrentUser));
+        OnPropertyChanged(nameof(ShowFollowButton));
+
+        // Ustal stan obserwowania dla cudzego profilu.
+        IsFollowing = value != null && !IsCurrentUser && _dataService.IsFollowing(_currentUserId, value.Id);
     }
 
     [RelayCommand]
@@ -560,8 +624,11 @@ public partial class ProfileViewModel : ObservableObject
     [RelayCommand]
     private void Follow()
     {
-        if (User == null) return;
-        _dataService.ToggleFollow(_currentUserId, User.Id);
+        if (User == null || IsCurrentUser) return;
+        IsFollowing = _dataService.ToggleFollow(_currentUserId, User.Id);
+        // Odśwież liczbę obserwujących na karcie profilu.
+        var refreshed = _dataService.GetUserProfileByHandle(User.Login);
+        if (refreshed != null) User = refreshed;
     }
 }
 
